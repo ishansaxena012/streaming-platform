@@ -18,6 +18,11 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Post('google')
+  googleSignIn(@Body('token') token: string) {
+    return this.authService.googleSignIn(token);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('me')
   getMe(@Req() req: any) {

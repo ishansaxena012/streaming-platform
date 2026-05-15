@@ -11,6 +11,9 @@ import { VideoModule } from './modules/video/video.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { BullModule } from '@nestjs/bullmq';
 import { QueueModule } from './modules/queue/queue.module';
+import { CategoryModule } from './modules/category/category.module';
+import { WatchlistModule } from './modules/watchlist/watchlist.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -27,6 +30,9 @@ import { QueueModule } from './modules/queue/queue.module';
       },
     }),
     QueueModule,
+    CategoryModule,
+    WatchlistModule,
+    AdminModule,
   ],
   controllers: [AppController, TestController],
   providers: [AppService],

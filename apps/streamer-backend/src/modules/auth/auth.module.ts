@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -9,6 +10,7 @@ import { PassportModule } from '@nestjs/passport';
 @Module({
   imports: [
     UsersModule,
+    ConfigModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'streamer_super_secret',
       signOptions: {

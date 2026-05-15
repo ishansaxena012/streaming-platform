@@ -20,16 +20,30 @@ enum VideoStatus {
   REJECTED
 }
 
+enum AdminRequestStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  password  String
+  password  String?
   name      String
   role      Role     @default(USER)
+
+  googleId String? @unique
+  avatarUrl String?
+
+  adminRequestStatus AdminRequestStatus @default(NONE)
+  adminRequestedAt DateTime?
 
   uploadedVideos Video[]
   approvedVideos Video[] @relation("ApprovedVideos")
   watchHistory WatchHistory[]
+  watchlist Watchlist[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -41,6 +55,9 @@ model Video {
   title String
   description String?
 
+  categoryId String?
+  category Category? @relation(fields: [categoryId], references: [id])
+
   videoUrl String?
   thumbnailUrl String?
 
@@ -48,8 +65,13 @@ model Video {
 
   duration Int?
 
+  watchlists Watchlist[]
+
   processingStartedAt DateTime?
   processedAt DateTime?
+  
+  processingError String?
+  retryCount Int @default(0)
 
   status VideoStatus @default(PENDING)
 
@@ -79,6 +101,31 @@ model WatchHistory {
 
   watchedAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, videoId])
+}
+
+model Category {
+  id String @id @default(cuid())
+
+  name String @unique
+  slug String @unique
+
+  createdAt DateTime @default(now())
+
+  videos Video[]
+}
+
+model Watchlist {
+  id String @id @default(cuid())
+
+  createdAt DateTime @default(now())
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  videoId String
+  video Video @relation(fields: [videoId], references: [id])
 
   @@unique([userId, videoId])
 }

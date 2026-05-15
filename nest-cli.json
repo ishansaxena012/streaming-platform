@@ -1,0 +1,50 @@
+{
+  "monorepo": true,
+  "projects": {
+    "streamer-admin-portal": {
+      "type": "application",
+      "root": "apps/streamer-admin-portal",
+      "entryFile": "main",
+      "sourceRoot": "apps/streamer-admin-portal/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/streamer-admin-portal/tsconfig.app.json"
+      }
+    },
+    "streamer-backend": {
+      "type": "application",
+      "root": "apps/streamer-backend",
+      "entryFile": "main",
+      "sourceRoot": "apps/streamer-backend/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/streamer-backend/tsconfig.app.json"
+      }
+    },
+    "streamer-super-admin-portal": {
+      "type": "application",
+      "root": "apps/streamer-super-admin-portal",
+      "entryFile": "main",
+      "sourceRoot": "apps/streamer-super-admin-portal/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/streamer-super-admin-portal/tsconfig.app.json"
+      }
+    },
+    "streamer-user-portal": {
+      "type": "application",
+      "root": "apps/streamer-user-portal",
+      "entryFile": "main",
+      "sourceRoot": "apps/streamer-user-portal/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/streamer-user-portal/tsconfig.app.json"
+      }
+    },
+    "streamer-worker": {
+      "type": "application",
+      "root": "apps/streamer-worker",
+      "entryFile": "main",
+      "sourceRoot": "apps/streamer-worker/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/streamer-worker/tsconfig.app.json"
+      }
+    }
+  }
+}

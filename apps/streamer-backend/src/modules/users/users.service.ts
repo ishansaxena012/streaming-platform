@@ -28,8 +28,10 @@ export class UsersService {
   createUser(data: {
     name: string;
     email: string;
-    password: string;
+    password?: string;
     role?: Role;
+    googleId?: string;
+    avatarUrl?: string;
   }) {
     return this.prisma.user.create({
       data: {
@@ -37,6 +39,8 @@ export class UsersService {
         email: data.email,
         password: data.password,
         role: data.role ?? Role.USER,
+        googleId: data.googleId,
+        avatarUrl: data.avatarUrl,
       },
       select: {
         id: true,
@@ -44,6 +48,21 @@ export class UsersService {
         email: true,
         role: true,
         createdAt: true,
+        avatarUrl: true,
+      },
+    });
+  }
+
+  requestAdmin(userId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        adminRequestStatus: 'PENDING',
+        adminRequestedAt: new Date(),
+      },
+      select: {
+        id: true,
+        adminRequestStatus: true,
       },
     });
   }

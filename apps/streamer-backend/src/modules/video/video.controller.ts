@@ -7,10 +7,11 @@ import { UpdateWatchProgressDto } from './dto/update-watch-progress.dto';
 import { RolesGuard } from '../../common/guards/roles.guards';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { VideoQueryDto } from './dto/video-query.dto';
 import { Query } from '@nestjs/common';
 import { GenerateUploadUrlDto } from './dto/generate-upload-url.dto';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 
 @Controller('videos')
 export class VideoController {
@@ -31,11 +32,20 @@ export class VideoController {
     const user = req.user as any;
     return this.videoService.findMyVideos(user.id);
   }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPER_ADMIN)
   @Get('pending')
   findPendingVideos() {
     return this.videoService.findPendingVideos();
+  }
+
+  @UseGuards(OptionalJwtAuthGuard)
+  @Get('home')
+  getHomeFeed(@Req() req: Request) {
+    const user = req.user as any;
+
+    return this.videoService.getHomeFeed(user?.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -122,5 +132,22 @@ export class VideoController {
   getAdminAnalytics(@Req() req: Request) {
     const user = req.user as any;
     return this.videoService.getAdminAnalytics(user.id);
+  }
+
+  @Get('trending')
+  getTrendingVideos() {
+    return this.videoService.getTrendingVideos();
+  }
+
+  @Get(':id')
+  findOneVideo(@Param('id') id: string) {
+    return this.videoService.findOneVideo(id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPER_ADMIN)
+  @Patch(':id/retry-processing')
+  retryVideoProcessing(@Param('id') id: string) {
+    return this.videoService.retryVideoProcessing(id);
   }
 }

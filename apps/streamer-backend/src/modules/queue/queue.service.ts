@@ -9,9 +9,29 @@ export class QueueService {
     private readonly videoProcessingQueue: Queue,
   ) {}
 
-  addVideoProcessingJob(videoId: string) {
-    return this.videoProcessingQueue.add('process-video', {
-      videoId,
+  addVideoProcessingJob(payload: {
+    videoId: string;
+    videoUrl?: string | null;
+    fileKey?: string | null;
+  }) {
+    return this.videoProcessingQueue.add('process-video', payload, {
+      attempts: 3,
+      backoff: {
+        type: 'exponential',
+        delay: 3000,
+      },
+      removeOnComplete: true,
+      removeOnFail: false,
     });
+  }
+
+  getVideoQueueStats() {
+    return this.videoProcessingQueue.getJobCounts(
+      'waiting',
+      'active',
+      'completed',
+      'failed',
+      'delayed',
+    );
   }
 }

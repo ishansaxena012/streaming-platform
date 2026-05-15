@@ -15,4 +15,8 @@ export class CreateVideoDto {
   @IsOptional()
   @IsString()
   thumbnailUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
 }

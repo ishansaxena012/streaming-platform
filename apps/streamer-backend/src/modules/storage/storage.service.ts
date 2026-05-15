@@ -17,10 +17,14 @@ export class StorageService {
 
     this.s3Client = new S3Client({
       region: this.configService.get<string>('S3_REGION') ?? 'ap-south-1',
+
       endpoint: this.configService.get<string>('S3_ENDPOINT') || undefined,
+
       forcePathStyle: !!this.configService.get<string>('S3_ENDPOINT'),
+
       credentials: {
         accessKeyId: this.configService.getOrThrow<string>('S3_ACCESS_KEY_ID'),
+
         secretAccessKey: this.configService.getOrThrow<string>(
           'S3_SECRET_ACCESS_KEY',
         ),

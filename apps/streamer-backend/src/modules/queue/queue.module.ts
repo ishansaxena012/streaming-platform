@@ -2,8 +2,9 @@ import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 
 import { QueueService } from './queue.service';
-import { VideoProcessingProcessor } from './video-processing.processor';
+// import { VideoProcessingProcessor } from './video-processing.processor';
 import { PrismaModule } from '../../prisma/prisma.module';
+import { QueueController } from './queue.controller';
 
 @Module({
   imports: [
@@ -12,7 +13,8 @@ import { PrismaModule } from '../../prisma/prisma.module';
       name: 'video-processing',
     }),
   ],
-  providers: [QueueService, VideoProcessingProcessor],
+  providers: [QueueService],
   exports: [QueueService],
+  controllers: [QueueController],
 })
 export class QueueModule {}

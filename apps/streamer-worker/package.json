@@ -1,0 +1,9 @@
+{
+  "name": "streamer-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "nest start",
+    "start:dev": "nest start --watch"
+  }
+}
