@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum VideoStatus {
+  PENDING
+  PROCESSING
+  READY_FOR_REVIEW
+  PUBLISHED
+  REJECTED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+
+  uploadedVideos Video[]
+  approvedVideos Video[] @relation("ApprovedVideos")
+  watchHistory WatchHistory[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Video {
+  id String @id @default(cuid())
+
+  title String
+  description String?
+
+  videoUrl String?
+  thumbnailUrl String?
+
+  hlsManifestUrl String?
+
+  duration Int?
+
+  processingStartedAt DateTime?
+  processedAt DateTime?
+
+  status VideoStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  uploadedById String
+  uploadedBy User @relation(fields: [uploadedById], references: [id])
+
+  approvedById String?
+  approvedBy User? @relation("ApprovedVideos", fields: [approvedById], references: [id])
+
+  watchHistory WatchHistory[]
+}
+
+model WatchHistory {
+  id String @id @default(cuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  videoId String
+  video Video @relation(fields: [videoId], references: [id])
+
+  progress Int @default(0)
+  completed Boolean @default(false)
+
+  watchedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, videoId])
+}
