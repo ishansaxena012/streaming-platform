@@ -6,7 +6,7 @@ import { QueueModule } from "./modules/queue/queue.module";
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: "apps/streamer-worker/.env",
+      envFilePath: [".env", "apps/streamer-worker/.env"],
     }),
     QueueModule,
   ],

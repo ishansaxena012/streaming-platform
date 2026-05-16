@@ -57,7 +57,7 @@ export class VideoService {
 
     await this.queueService.addVideoProcessingJob({
       videoId: video.id,
-      videoUrl: video.videoUrl,
+      fileKey: video.videoUrl,
     });
 
     return video;
@@ -302,7 +302,7 @@ export class VideoService {
 
     await this.queueService.addVideoProcessingJob({
       videoId: video.id,
-      videoUrl: video.videoUrl,
+      fileKey: video.videoUrl,
     });
 
     return video;

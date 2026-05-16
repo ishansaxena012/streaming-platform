@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -18,6 +19,7 @@ enum VideoStatus {
   READY_FOR_REVIEW
   PUBLISHED
   REJECTED
+  FAILED
 }
 
 enum AdminRequestStatus {
