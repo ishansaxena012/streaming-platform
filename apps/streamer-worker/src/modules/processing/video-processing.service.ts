@@ -5,6 +5,11 @@ import ffmpeg from "fluent-ffmpeg";
 import ffmpegStatic from "ffmpeg-static";
 import * as crypto from "crypto";
 
+export type HlsGenerationResult = {
+  outputDir: string;
+  manifestPath: string;
+};
+
 @Injectable()
 export class VideoProcessingService {
   constructor() {
@@ -13,51 +18,79 @@ export class VideoProcessingService {
     }
   }
 
-  async generateHls(
-    localVideoPath: string,
-  ): Promise<{ outputDir: string; manifestPath: string }> {
+  async generateHls(localVideoPath: string): Promise<HlsGenerationResult> {
     const outputId = crypto.randomBytes(16).toString("hex");
-
     const outputDir = path.join(process.cwd(), "hls", outputId);
 
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
-    const outputPath = path.join(outputDir, "master.m3u8");
+    const masterPath = path.join(outputDir, "master.m3u8");
 
-    return new Promise((resolve, reject) => {
+    return new Promise<HlsGenerationResult>((resolve, reject) => {
       ffmpeg(localVideoPath)
         .outputOptions([
           "-preset veryfast",
+
+          "-filter_complex",
+          "[0:v]split=3[v240src][v480src][v720src];" +
+            "[v240src]scale=w=426:h=240:force_original_aspect_ratio=decrease,pad=426:240:(ow-iw)/2:(oh-ih)/2[v240];" +
+            "[v480src]scale=w=854:h=480:force_original_aspect_ratio=decrease,pad=854:480:(ow-iw)/2:(oh-ih)/2[v480];" +
+            "[v720src]scale=w=1280:h=720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2[v720]",
+
+          "-map [v240]",
+          "-c:v:0 libx264",
+          "-b:v:0 400k",
+          "-maxrate:v:0 500k",
+          "-bufsize:v:0 800k",
+
+          "-map [v480]",
+          "-c:v:1 libx264",
+          "-b:v:1 1000k",
+          "-maxrate:v:1 1200k",
+          "-bufsize:v:1 2000k",
+
+          "-map [v720]",
+          "-c:v:2 libx264",
+          "-b:v:2 2500k",
+          "-maxrate:v:2 3000k",
+          "-bufsize:v:2 5000k",
+
           "-g 48",
+          "-keyint_min 48",
           "-sc_threshold 0",
-          "-map 0:v:0",
-          "-map 0:a:0?",
-          "-c:v libx264",
-          "-c:a aac",
-          "-ar 48000",
-          "-b:a 128k",
+
+          "-f hls",
           "-hls_time 6",
           "-hls_playlist_type vod",
+
           "-hls_segment_filename",
-          path.join(outputDir, "segment_%03d.ts"),
+          path.join(outputDir, "%v_segment_%03d.ts"),
+
+          "-master_pl_name",
+          "master.m3u8",
+
+          "-var_stream_map",
+          "v:0 v:1 v:2",
         ])
-        .output(outputPath)
+        .output(path.join(outputDir, "%v.m3u8"))
         .on("start", (cmd) => {
           console.log("FFmpeg started:", cmd);
         })
+        .on("stderr", (line) => {
+          console.log("FFmpeg:", line);
+        })
         .on("end", () => {
-          console.log("HLS generation completed");
+          console.log("Adaptive HLS generation completed");
 
           resolve({
             outputDir,
-            manifestPath: outputPath,
+            manifestPath: masterPath,
           });
         })
         .on("error", (err) => {
           console.error("FFmpeg error:", err);
-
           reject(err);
         })
         .run();

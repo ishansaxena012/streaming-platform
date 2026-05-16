@@ -78,8 +78,37 @@ export class VideoController {
     return this.videoService.updateWatchProgress(
       id,
       user.id,
-      dto.progress,
+      dto.progressSeconds,
       dto.completed,
+    );
+  }
+
+  @Get(':id/playback')
+  getPlaybackVideo(@Param('id') id: string) {
+    return this.videoService.getPlaybackVideo(id);
+  }
+
+  @Post(':id/play')
+  @UseGuards(JwtAuthGuard)
+  registerPlayback(@Param('id') id: string, @Req() req: Request) {
+    const user = req.user as any;
+
+    return this.videoService.registerPlayback(user.id, id);
+  }
+
+  @Post(':id/progress')
+  @UseGuards(JwtAuthGuard)
+  updateProgress(
+    @Param('id') id: string,
+    @Body() dto: UpdateWatchProgressDto,
+    @Req() req: Request,
+  ) {
+    const user = req.user as any;
+
+    return this.videoService.updateWatchProgress(
+      id,
+      user.id,
+      dto.progressSeconds,
     );
   }
 
@@ -132,6 +161,14 @@ export class VideoController {
   getAdminAnalytics(@Req() req: Request) {
     const user = req.user as any;
     return this.videoService.getAdminAnalytics(user.id);
+  }
+
+  @Get('users/me/continue-watching')
+  @UseGuards(JwtAuthGuard)
+  getContinueWatching(@Req() req: Request) {
+    const user = req.user as any;
+
+    return this.videoService.getContinueWatching(user.sub);
   }
 
   @Get('trending')

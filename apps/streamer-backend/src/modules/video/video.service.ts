@@ -5,6 +5,7 @@ import { VideoQueryDto } from './dto/video-query.dto';
 import { Query } from '@nestjs/common';
 import { StorageService } from '../storage/storage.service';
 import { QueueService } from '../queue/queue.service';
+import { CloudFrontService } from '../cloudfront/cloudfront.service';
 
 @Injectable()
 export class VideoService {
@@ -12,6 +13,7 @@ export class VideoService {
     private readonly prisma: PrismaService,
     private readonly storageService: StorageService,
     private readonly queueService: QueueService,
+    private readonly cloudFrontService: CloudFrontService,
   ) {}
 
   createVideo(dto: CreateVideoDto, userId: string) {
@@ -89,13 +91,13 @@ export class VideoService {
         },
       },
       update: {
-        progress,
+        progressSeconds: progress,
         completed,
       },
       create: {
         userId,
         videoId,
-        progress,
+        progressSeconds: progress,
         completed,
       },
     });
@@ -110,7 +112,7 @@ export class VideoService {
         video: true,
       },
       orderBy: {
-        updatedAt: 'desc',
+        lastWatchedAt: 'desc',
       },
     });
   }
@@ -258,7 +260,7 @@ export class VideoService {
           },
         },
         _sum: {
-          progress: true,
+          progressSeconds: true,
         },
       }),
     ]);
@@ -267,7 +269,7 @@ export class VideoService {
       totalVideos: videoIds.length,
       totalViews,
       completedViews,
-      totalWatchProgress: totalWatchProgress._sum.progress ?? 0,
+      totalWatchProgress: totalWatchProgress._sum.progressSeconds ?? 0,
     };
   }
 
@@ -387,7 +389,7 @@ export class VideoService {
                 video: true,
               },
               orderBy: {
-                updatedAt: 'desc',
+                lastWatchedAt: 'desc',
               },
               take: 10,
             })
@@ -400,5 +402,69 @@ export class VideoService {
       categories,
       continueWatching,
     };
+  }
+
+  async getPlaybackVideo(videoId: string) {
+    const video = await this.prisma.video.findFirst({
+      where: {
+        id: videoId,
+        status: 'PUBLISHED',
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        thumbnailUrl: true,
+        hlsManifestUrl: true,
+        duration: true,
+      },
+    });
+
+    if (!video) {
+      throw new NotFoundException('Published video not found');
+    }
+
+    return {
+      ...video,
+      hlsManifestUrl: this.cloudFrontService.generateSignedUrl(
+        video.hlsManifestUrl!,
+      ),
+    };
+  }
+
+  async registerPlayback(userId: string, videoId: string) {
+    return this.prisma.videoView.create({
+      data: {
+        userId,
+        videoId,
+      },
+    });
+  }
+
+  async getContinueWatching(userId: string) {
+    return this.prisma.watchHistory.findMany({
+      where: {
+        userId,
+        completed: false,
+      },
+
+      orderBy: {
+        lastWatchedAt: 'desc',
+      },
+
+      take: 20,
+
+      include: {
+        video: {
+          select: {
+            id: true,
+            title: true,
+            thumbnailUrl: true,
+            hlsManifestUrl: true,
+            duration: true,
+          },
+        },
+      },
+    });
   }
 }

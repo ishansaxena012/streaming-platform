@@ -3,7 +3,7 @@ import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 export class UpdateWatchProgressDto {
   @IsInt()
   @Min(0)
-  progress: number;
+  progressSeconds: number;
 
   @IsOptional()
   @IsBoolean()
