@@ -15,6 +15,7 @@ export class QueueService {
     fileKey?: string | null;
   }) {
     return this.videoProcessingQueue.add('process-video', payload, {
+      jobId: payload.videoId,
       attempts: 3,
       backoff: {
         type: 'exponential',

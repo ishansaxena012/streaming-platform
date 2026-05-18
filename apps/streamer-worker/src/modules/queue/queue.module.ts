@@ -4,6 +4,7 @@ import { VideoProcessingWorker } from "./video-processing.worker";
 import { VideoProcessingService } from "../processing/video-processing.service";
 import { S3Service } from "../storage/s3.service";
 import { PrismaService } from "../database/prisma.service";
+import { WorkerCacheService } from "../database/worker-cache.service";
 
 @Module({
   providers: [
@@ -11,6 +12,7 @@ import { PrismaService } from "../database/prisma.service";
     VideoProcessingService,
     S3Service,
     PrismaService,
+    WorkerCacheService,
   ],
 })
 export class QueueModule {}

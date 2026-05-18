@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -19,6 +20,7 @@ enum VideoStatus {
   PUBLISHED
   REJECTED
   FAILED
+  APPROVED
 }
 
 enum AdminRequestStatus {
@@ -28,6 +30,11 @@ enum AdminRequestStatus {
   REJECTED
 }
 
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+}
+
 model User {
   id       String  @id @default(cuid())
   email    String  @unique
@@ -35,21 +42,28 @@ model User {
   name     String
   role     Role    @default(USER)
 
+  subscriptionPlan      SubscriptionPlan @default(FREE)
+  subscriptionExpiresAt DateTime?
+
   googleId  String? @unique
   avatarUrl String?
 
   adminRequestStatus AdminRequestStatus @default(NONE)
   adminRequestedAt   DateTime?
 
-  videoViews VideoView[]
+  videoViews    VideoView[]
+  videoProgress VideoProgress[]
 
   uploadedVideos Video[]
-  approvedVideos Video[]        @relation("ApprovedVideos")
-  watchHistory   WatchHistory[]
-  watchlist      Watchlist[]
+  approvedVideos Video[] @relation("ApprovedVideos")
+
+  watchHistory WatchHistory[]
+  watchlist    Watchlist[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([subscriptionPlan])
 }
 
 model Video {
@@ -66,7 +80,11 @@ model Video {
 
   duration Int?
 
-  views          VideoView[]
+  isPremium Boolean @default(false)
+
+  videoViews    VideoView[]
+  videoProgress VideoProgress[]
+
   hlsManifestUrl String?
 
   watchlists Watchlist[]
@@ -74,8 +92,10 @@ model Video {
   processingStartedAt DateTime?
   processedAt         DateTime?
 
+  processingProgress Int @default(0)
+
   processingError String?
-  retryCount      Int     @default(0)
+  retryCount      Int @default(0)
 
   status VideoStatus @default(PENDING)
 
@@ -83,12 +103,18 @@ model Video {
   updatedAt DateTime @updatedAt
 
   uploadedById String
-  uploadedBy   User   @relation(fields: [uploadedById], references: [id])
+  uploadedBy   User @relation(fields: [uploadedById], references: [id])
 
   approvedById String?
-  approvedBy   User?   @relation("ApprovedVideos", fields: [approvedById], references: [id])
+  approvedBy   User? @relation("ApprovedVideos", fields: [approvedById], references: [id])
 
   watchHistory WatchHistory[]
+
+  @@index([status])
+  @@index([isPremium])
+  @@index([categoryId])
+  @@index([uploadedById])
+  @@index([createdAt])
 }
 
 model WatchHistory {
@@ -97,9 +123,11 @@ model WatchHistory {
   userId  String
   videoId String
 
-  progressSeconds Int      @default(0)
-  completed       Boolean  @default(false)
-  lastWatchedAt   DateTime @default(now()) @updatedAt
+  progressSeconds Int @default(0)
+
+  completed Boolean @default(false)
+
+  lastWatchedAt DateTime @default(now()) @updatedAt
 
   createdAt DateTime @default(now())
 
@@ -126,10 +154,10 @@ model Watchlist {
   createdAt DateTime @default(now())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id])
 
   videoId String
-  video   Video  @relation(fields: [videoId], references: [id])
+  video   Video @relation(fields: [videoId], references: [id])
 
   @@unique([userId, videoId])
 }
@@ -137,14 +165,33 @@ model Watchlist {
 model VideoView {
   id String @id @default(cuid())
 
-  userId  String
+  userId String?
   videoId String
 
   createdAt DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id])
+  user  User? @relation(fields: [userId], references: [id])
   video Video @relation(fields: [videoId], references: [id])
 
   @@index([videoId])
   @@index([userId])
+}
+
+model VideoProgress {
+  id String @id @default(cuid())
+
+  userId  String
+  videoId String
+
+  watchedSeconds Int @default(0)
+
+  completed Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id])
+  video Video @relation(fields: [videoId], references: [id])
+
+  @@unique([userId, videoId])
 }

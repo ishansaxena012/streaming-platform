@@ -18,7 +18,10 @@ export class VideoProcessingService {
     }
   }
 
-  async generateHls(localVideoPath: string): Promise<HlsGenerationResult> {
+  async generateHls(
+    localVideoPath: string,
+    onProgress?: (progress: number) => Promise<void>,
+  ): Promise<HlsGenerationResult> {
     const outputId = crypto.randomBytes(16).toString("hex");
     const outputDir = path.join(process.cwd(), "hls", outputId);
 
@@ -78,8 +81,14 @@ export class VideoProcessingService {
         .on("start", (cmd) => {
           console.log("FFmpeg started:", cmd);
         })
-        .on("stderr", (line) => {
-          console.log("FFmpeg:", line);
+        .on("progress", async (progress) => {
+          const percent = Math.min(Math.floor(progress.percent || 0), 100);
+
+          console.log(`Processing: ${percent}%`);
+
+          if (onProgress) {
+            await onProgress(percent);
+          }
         })
         .on("end", () => {
           console.log("Adaptive HLS generation completed");
@@ -94,6 +103,49 @@ export class VideoProcessingService {
           reject(err);
         })
         .run();
+    });
+  }
+
+  async getVideoMetadata(localVideoPath: string): Promise<{
+    duration: number;
+  }> {
+    return new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(localVideoPath, (err, metadata) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve({
+          duration: Math.floor(metadata.format.duration || 0),
+        });
+      });
+    });
+  }
+
+  async generateThumbnail(
+    localVideoPath: string,
+    outputDir: string,
+  ): Promise<string> {
+    const thumbnailPath = path.join(outputDir, "thumbnail.jpg");
+
+    return new Promise((resolve, reject) => {
+      ffmpeg(localVideoPath)
+        .screenshots({
+          timestamps: ["10%"],
+          filename: "thumbnail.jpg",
+          folder: outputDir,
+          size: "1280x720",
+        })
+        .on("end", () => {
+          console.log("Thumbnail generated");
+
+          resolve(thumbnailPath);
+        })
+        .on("error", (err) => {
+          console.error("Thumbnail generation failed:", err);
+
+          reject(err);
+        });
     });
   }
 }

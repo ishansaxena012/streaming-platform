@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Role } from '@prisma/client';
 
@@ -20,6 +20,10 @@ export class UsersService {
         name: true,
         email: true,
         role: true,
+
+        subscriptionPlan: true,
+        subscriptionExpiresAt: true,
+
         createdAt: true,
       },
     });
@@ -49,20 +53,67 @@ export class UsersService {
         role: true,
         createdAt: true,
         avatarUrl: true,
+        subscriptionPlan: true,
+        subscriptionExpiresAt: true,
       },
     });
   }
 
-  requestAdmin(userId: string) {
+  async requestAdmin(userId: string) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (existingUser?.adminRequestStatus === 'PENDING') {
+      throw new BadRequestException('Admin request already pending');
+    }
+
+    if (
+      existingUser?.role === 'ADMIN' ||
+      existingUser?.role === 'SUPER_ADMIN'
+    ) {
+      throw new BadRequestException('User is already an admin');
+    }
+
     return this.prisma.user.update({
-      where: { id: userId },
+      where: {
+        id: userId,
+      },
+
       data: {
         adminRequestStatus: 'PENDING',
         adminRequestedAt: new Date(),
       },
+
       select: {
         id: true,
         adminRequestStatus: true,
+      },
+    });
+  }
+
+  upgradeToPremium(userId: string) {
+    const expiryDate = new Date();
+
+    expiryDate.setMonth(expiryDate.getMonth() + 1);
+
+    return this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+
+      data: {
+        subscriptionPlan: 'PREMIUM',
+        subscriptionExpiresAt: expiryDate,
+      },
+
+      select: {
+        id: true,
+        email: true,
+        subscriptionPlan: true,
+        subscriptionExpiresAt: true,
       },
     });
   }

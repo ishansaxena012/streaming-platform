@@ -9,6 +9,7 @@ import { VideoProcessingService } from "../processing/video-processing.service";
 import { S3Service } from "../storage/s3.service";
 import { PrismaService } from "../database/prisma.service";
 import { VideoStatus } from "@prisma/client";
+import { WorkerCacheService } from "../database/worker-cache.service";
 
 @Injectable()
 export class VideoProcessingWorker implements OnModuleInit {
@@ -16,6 +17,7 @@ export class VideoProcessingWorker implements OnModuleInit {
     private readonly videoProcessingService: VideoProcessingService,
     private readonly s3Service: S3Service,
     private readonly prisma: PrismaService,
+    private readonly workerCacheService: WorkerCacheService,
   ) {}
 
   async onModuleInit() {
@@ -28,10 +30,16 @@ export class VideoProcessingWorker implements OnModuleInit {
     const connection = new Redis(process.env.REDIS_URL!, {
       maxRetriesPerRequest: null,
     });
+    const publisher = new Redis(process.env.REDIS_URL!, {
+      maxRetriesPerRequest: null,
+    });
 
     new Worker(
       "video-processing",
       async (job) => {
+        let inputPath: string | undefined;
+        let outputDir: string | undefined;
+
         try {
           console.log("Worker processing:", job.name, job.data);
 
@@ -47,7 +55,7 @@ export class VideoProcessingWorker implements OnModuleInit {
             fs.mkdirSync(tmpDir, { recursive: true });
           }
 
-          let inputPath = localVideoPath;
+          inputPath = localVideoPath;
 
           if (!inputPath && fileKey) {
             inputPath = path.join(tmpDir, `${videoId}.mp4`);
@@ -88,14 +96,77 @@ export class VideoProcessingWorker implements OnModuleInit {
             );
           }
 
-          const result =
-            await this.videoProcessingService.generateHls(inputPath);
+          let metadata = await this.workerCacheService.getCachedFfmpegMetadata(videoId);
+          if (!metadata) {
+            metadata = await this.videoProcessingService.getVideoMetadata(inputPath);
+            await this.workerCacheService.setCachedFfmpegMetadata(videoId, metadata);
+          }
+
+          console.log("Video metadata:", metadata);
+
+          const thumbnailTempDir = path.join(process.cwd(), "tmp", videoId);
+
+          if (!fs.existsSync(thumbnailTempDir)) {
+            fs.mkdirSync(thumbnailTempDir, { recursive: true });
+          }
+
+          const thumbnailPath =
+            await this.videoProcessingService.generateThumbnail(
+              inputPath,
+              thumbnailTempDir,
+            );
+
+          const result = await this.videoProcessingService.generateHls(
+            inputPath,
+            async (progress) => {
+              const cachedProgress = await this.workerCacheService.getCachedProcessingProgress(videoId);
+              if (
+                cachedProgress === null ||
+                progress - cachedProgress >= 2 ||
+                progress === 100 ||
+                progress === 0
+              ) {
+                await this.prisma.video.update({
+                  where: {
+                    id: videoId,
+                  },
+                  data: {
+                    processingProgress: progress,
+                    status: VideoStatus.PROCESSING,
+                  },
+                });
+
+                await publisher.publish(
+                  "video-progress",
+                  JSON.stringify({
+                    videoId,
+                    progress,
+                    status: VideoStatus.PROCESSING,
+                  }),
+                );
+
+                await this.workerCacheService.setCachedProcessingProgress(videoId, progress);
+              }
+            },
+          );
+
+          outputDir = result.outputDir;
 
           const hlsPrefix = `hls/${videoId}`;
 
           console.log("Uploading HLS files to S3...");
 
-          await this.s3Service.uploadDirectory(result.outputDir, hlsPrefix);
+          await this.s3Service.uploadDirectory(outputDir, hlsPrefix);
+
+          const thumbnailKey = `thumbnails/${videoId}.jpg`;
+
+          await this.s3Service.uploadFile(
+            thumbnailPath,
+            thumbnailKey,
+            "image/jpeg",
+          );
+
+          const thumbnailUrl = `${process.env.CDN_BASE_URL}/${thumbnailKey}`;
 
           const hlsManifestUrl = `${process.env.CDN_BASE_URL}/${hlsPrefix}/master.m3u8`;
 
@@ -108,10 +179,15 @@ export class VideoProcessingWorker implements OnModuleInit {
             data: {
               status: VideoStatus.PUBLISHED,
               hlsManifestUrl,
+              thumbnailUrl,
+              duration: metadata.duration,
+              processingProgress: 100,
               processedAt: new Date(),
               processingError: null,
             },
           });
+
+          await this.workerCacheService.invalidateBackendCaches(videoId);
 
           console.log("Database updated successfully");
 
@@ -134,11 +210,29 @@ export class VideoProcessingWorker implements OnModuleInit {
                   error instanceof Error
                     ? error.message
                     : "Unknown processing error",
+                processingProgress: 0,
               },
             });
+            await this.workerCacheService.invalidateBackendCaches(job.data.videoId);
           }
 
           throw error;
+        } finally {
+          try {
+            if (inputPath && fs.existsSync(inputPath)) {
+              fs.unlinkSync(inputPath);
+
+              console.log("Cleaned input file:", inputPath);
+            }
+
+            if (outputDir && fs.existsSync(outputDir)) {
+              fs.rmdirSync(outputDir);
+
+              console.log("Cleaned HLS directory:", outputDir);
+            }
+          } catch (cleanupError) {
+            console.error("Cleanup failed:", cleanupError);
+          }
         }
       },
       { connection },

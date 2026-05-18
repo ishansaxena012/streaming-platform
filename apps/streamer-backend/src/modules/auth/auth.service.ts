@@ -79,6 +79,10 @@ export class AuthService {
       name: user.name,
       email: user.email,
       role: user.role,
+
+      subscriptionPlan: user.subscriptionPlan,
+      subscriptionExpiresAt: user.subscriptionExpiresAt,
+
       createdAt: user.createdAt,
     };
 
@@ -123,6 +127,10 @@ export class AuthService {
         name: user.name,
         email: user.email,
         role: user.role,
+
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionExpiresAt: user.subscriptionExpiresAt,
+
         createdAt: user.createdAt,
         avatarUrl: user.avatarUrl,
       };
@@ -144,11 +152,19 @@ export class AuthService {
     id: string;
     email: string;
     role: string;
+    subscriptionPlan?: string;
+    subscriptionExpiresAt?: Date | null;
   }) {
     return this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
       role: user.role,
+      subscriptionPlan: user.subscriptionPlan,
+      subscriptionExpiresAt: user.subscriptionExpiresAt,
     });
+  }
+
+  async getCurrentUser(userId: string) {
+    return this.usersService.findById(userId);
   }
 }

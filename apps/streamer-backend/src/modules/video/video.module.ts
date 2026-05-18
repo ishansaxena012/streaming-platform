@@ -8,10 +8,11 @@ import { StorageModule } from '../storage/storage.module';
 
 import { QueueModule } from '../queue/queue.module';
 import { CloudFrontService } from '../cloudfront/cloudfront.service';
+import { VideoProgressService } from './video-progress.service';
 
 @Module({
   imports: [PrismaModule, StorageModule, QueueModule],
   controllers: [VideoController],
-  providers: [VideoService, CloudFrontService],
+  providers: [VideoService, CloudFrontService, VideoProgressService],
 })
 export class VideoModule {}
