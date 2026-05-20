@@ -10,6 +10,7 @@ import { RegisterDto } from './dto/register.dto/register.dto';
 import { LoginDto } from './dto/login.dto/login.dto';
 import { ConfigService } from '@nestjs/config';
 import { OAuth2Client } from 'google-auth-library';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -45,7 +46,7 @@ export class AuthService {
       name: dto.name,
       email: dto.email,
       password: hashedPassword,
-      role: dto.role,
+      role: Role.USER,
     });
 
     const token = await this.generateToken(user);
@@ -89,7 +90,7 @@ export class AuthService {
     const token = await this.generateToken(safeUser);
 
     return {
-      message: 'Login successful',
+      // message: 'Login successful',
       user: safeUser,
       token,
     };

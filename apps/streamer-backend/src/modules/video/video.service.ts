@@ -13,7 +13,12 @@ import { QueueService } from '../queue/queue.service';
 import { CloudFrontService } from '../cloudfront/cloudfront.service';
 import { CacheService } from '../cache/cache.service';
 import { VideoProgressService } from './video-progress.service';
-import { PaginationDto, createPaginatedResponse } from '../../common/dto/pagination.dto';
+import {
+  PaginationDto,
+  createPaginatedResponse,
+} from '../../common/dto/pagination.dto';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class VideoService {
@@ -23,6 +28,8 @@ export class VideoService {
     private readonly queueService: QueueService,
     private readonly cloudFrontService: CloudFrontService,
     private readonly cacheService: CacheService,
+    @InjectQueue('video-processing')
+    private readonly videoQueue: Queue,
   ) {}
 
   async createVideo(dto: CreateVideoDto, userId: string) {
@@ -31,6 +38,11 @@ export class VideoService {
         ...dto,
         uploadedById: userId,
       },
+    });
+
+    await this.videoQueue.add('process-video', {
+      videoId: video.id,
+      fileKey: video.videoUrl,
     });
 
     await this.cacheService.del('videos:homepage');
@@ -90,7 +102,10 @@ export class VideoService {
     return createPaginatedResponse(items, total, page, limit);
   }
 
-  private async invalidateVideoCaches(videoId: string, categoryId?: string | null) {
+  private async invalidateVideoCaches(
+    videoId: string,
+    categoryId?: string | null,
+  ) {
     await this.cacheService.del('videos:homepage');
     await this.cacheService.del('videos:trending');
     await this.cacheService.del('admin:platform-stats');
@@ -118,17 +133,14 @@ export class VideoService {
 
   async approveVideo(videoId: string, adminId: string) {
     const video = await this.prisma.video.update({
-      where: { id: videoId },
-      data: {
-        status: 'PROCESSING',
-        approvedById: adminId,
-        processingStartedAt: new Date(),
+      where: {
+        id: videoId,
       },
-    });
 
-    await this.queueService.addVideoProcessingJob({
-      videoId: video.id,
-      fileKey: video.videoUrl,
+      data: {
+        status: 'PUBLISHED',
+        approvedById: adminId,
+      },
     });
 
     await this.invalidateVideoCaches(videoId, video.categoryId);
@@ -370,12 +382,13 @@ export class VideoService {
   async findOneVideo(id: string) {
     return this.cacheService.getOrSet(
       `video:${id}:metadata`,
-      () => this.prisma.video.findFirst({
-        where: {
-          id,
-          status: 'PUBLISHED',
-        },
-      }),
+      () =>
+        this.prisma.video.findFirst({
+          where: {
+            id,
+            status: 'PUBLISHED',
+          },
+        }),
       CacheService.TTL_VIDEO_METADATA,
     );
   }
@@ -807,7 +820,11 @@ export class VideoService {
       continueWatching: [],
     };
 
-    await this.cacheService.set('videos:homepage', baseFeed, CacheService.TTL_HOMEPAGE);
+    await this.cacheService.set(
+      'videos:homepage',
+      baseFeed,
+      CacheService.TTL_HOMEPAGE,
+    );
 
     if (userId) {
       const continueWatching = await this.prisma.watchHistory.findMany({

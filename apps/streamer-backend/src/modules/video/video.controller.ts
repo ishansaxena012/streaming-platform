@@ -66,7 +66,9 @@ export class VideoController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all videos uploaded by the logged-in admin with pagination' })
+  @ApiOperation({
+    summary: 'Get all videos uploaded by the logged-in admin with pagination',
+  })
   @ApiOkResponse({ description: 'Admin videos retrieved successfully.' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized access.' })
   @ApiForbiddenResponse({ description: 'Forbidden access - Admin only.' })
@@ -79,7 +81,10 @@ export class VideoController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all pending videos awaiting approval with pagination (Super Admin only)' })
+  @ApiOperation({
+    summary:
+      'Get all pending videos awaiting approval with pagination (Super Admin only)',
+  })
   @ApiOkResponse({ description: 'Pending videos retrieved successfully.' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized access.' })
   @ApiForbiddenResponse({ description: 'Forbidden access - Super Admin only.' })
@@ -215,7 +220,10 @@ export class VideoController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all videos in administrative dashboard context with pagination (Admin only)' })
+  @ApiOperation({
+    summary:
+      'Get all videos in administrative dashboard context with pagination (Admin only)',
+  })
   @ApiOkResponse({ description: 'All videos retrieved successfully.' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized access.' })
   @ApiForbiddenResponse({ description: 'Forbidden access - Admin only.' })
@@ -228,7 +236,9 @@ export class VideoController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get summary statistics for dashboard (Admin only)' })
+  @ApiOperation({
+    summary: 'Get summary statistics for dashboard (Admin only)',
+  })
   @ApiOkResponse({ description: 'Stats retrieved successfully.' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized access.' })
   @ApiForbiddenResponse({ description: 'Forbidden access - Admin only.' })
@@ -241,7 +251,9 @@ export class VideoController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Generate a presigned S3 upload URL for media (Admin only)' })
+  @ApiOperation({
+    summary: 'Generate a presigned S3 upload URL for media (Admin only)',
+  })
   @ApiCreatedResponse({ description: 'Presigned URL generated successfully.' })
   @ApiBadRequestResponse({ description: 'Invalid upload parameters.' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized access.' })
@@ -260,7 +272,9 @@ export class VideoController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get detailed analytical graphs/metrics for admin (Admin only)' })
+  @ApiOperation({
+    summary: 'Get detailed analytical graphs/metrics for admin (Admin only)',
+  })
   @ApiOkResponse({ description: 'Analytics retrieved successfully.' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized access.' })
   @ApiForbiddenResponse({ description: 'Forbidden access - Admin only.' })
@@ -273,8 +287,12 @@ export class VideoController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get continuation list of videos half-watched with pagination' })
-  @ApiOkResponse({ description: 'Continue watching list retrieved successfully.' })
+  @ApiOperation({
+    summary: 'Get continuation list of videos half-watched with pagination',
+  })
+  @ApiOkResponse({
+    description: 'Continue watching list retrieved successfully.',
+  })
   @ApiUnauthorizedResponse({ description: 'Unauthorized access.' })
   @Get('users/me/continue-watching')
   @UseGuards(JwtAuthGuard)
@@ -297,7 +315,9 @@ export class VideoController {
     return this.videoService.getCategories();
   }
 
-  @ApiOperation({ summary: 'Search published videos by title/description with pagination' })
+  @ApiOperation({
+    summary: 'Search published videos by title/description with pagination',
+  })
   @ApiQuery({ name: 'q', description: 'Search term', required: true })
   @ApiOkResponse({ description: 'Matched videos returned successfully.' })
   @Get('search')
@@ -305,21 +325,34 @@ export class VideoController {
     return this.videoService.searchVideos(queryStr, query);
   }
 
-  @ApiOperation({ summary: 'Get published videos in a category with pagination' })
-  @ApiParam({ name: 'slug', description: 'The unique slug of the category', required: true })
+  @ApiOperation({
+    summary: 'Get published videos in a category with pagination',
+  })
+  @ApiParam({
+    name: 'slug',
+    description: 'The unique slug of the category',
+    required: true,
+  })
   @ApiOkResponse({ description: 'Category videos retrieved successfully.' })
   @ApiNotFoundResponse({ description: 'Category not found.' })
   @Get('category/:slug')
-  getVideosByCategory(@Param('slug') slug: string, @Query() query: PaginationDto) {
+  getVideosByCategory(
+    @Param('slug') slug: string,
+    @Query() query: PaginationDto,
+  ) {
     return this.videoService.getVideosByCategory(slug, query);
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Retry transcode/processing of failed HLS encoding' })
+  @ApiOperation({
+    summary: 'Retry transcode/processing of failed HLS encoding',
+  })
   @ApiOkResponse({ description: 'Retried encoding successfully queued.' })
   @ApiNotFoundResponse({ description: 'Video not found.' })
   @ApiUnauthorizedResponse({ description: 'Unauthorized access.' })
-  @ApiForbiddenResponse({ description: 'Forbidden access - Admin/Super Admin only.' })
+  @ApiForbiddenResponse({
+    description: 'Forbidden access - Admin/Super Admin only.',
+  })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN, Role.SUPER_ADMIN)
   @Patch(':id/retry-processing')
@@ -358,7 +391,9 @@ export class VideoController {
     return this.videoService.trackVideoView(req.user?.sub, videoId);
   }
 
-  @ApiOperation({ summary: 'Get current HLS transcoding / processing progress and status' })
+  @ApiOperation({
+    summary: 'Get current HLS transcoding / processing progress and status',
+  })
   @ApiOkResponse({ description: 'Processing status retrieved successfully.' })
   @ApiNotFoundResponse({ description: 'Video not found.' })
   @Get(':id/status')
@@ -376,8 +411,12 @@ export class VideoController {
     return this.videoService.getUserWatchlist(req.user.id, query);
   }
 
-  @ApiOperation({ summary: 'Server-sent events for video HLS transcoding progress stream' })
-  @ApiOkResponse({ description: 'SSE progress stream successfully initialized.' })
+  @ApiOperation({
+    summary: 'Server-sent events for video HLS transcoding progress stream',
+  })
+  @ApiOkResponse({
+    description: 'SSE progress stream successfully initialized.',
+  })
   @Sse(':id/progress/stream')
   streamVideoProgress(@Param('id') videoId: string): Observable<MessageEvent> {
     return new Observable((subscriber) => {
@@ -395,7 +434,6 @@ export class VideoController {
       };
     });
   }
-
   @ApiOperation({ summary: 'Get single video by ID' })
   @ApiOkResponse({ description: 'Video retrieved successfully.' })
   @ApiNotFoundResponse({ description: 'Video not found.' })

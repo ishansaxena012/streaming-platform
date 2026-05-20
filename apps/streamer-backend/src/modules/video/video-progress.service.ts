@@ -1,14 +1,25 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
+
 import Redis from 'ioredis';
 
 @Injectable()
 export class VideoProgressService implements OnModuleInit {
+  private publisher: Redis;
+
   private subscriber: Redis;
 
   private listeners = new Map<string, Set<(data: any) => void>>();
 
   constructor() {
-    this.subscriber = new Redis(process.env.REDIS_URL!);
+    this.publisher = new Redis(process.env.REDIS_URL!, {
+      lazyConnect: true,
+      maxRetriesPerRequest: null,
+    });
+
+    this.subscriber = new Redis(process.env.REDIS_URL!, {
+      lazyConnect: true,
+      maxRetriesPerRequest: null,
+    });
   }
 
   async onModuleInit() {
@@ -29,6 +40,10 @@ export class VideoProgressService implements OnModuleInit {
         listener(data);
       }
     });
+  }
+
+  async publish(data: any) {
+    await this.publisher.publish('video-progress', JSON.stringify(data));
   }
 
   subscribe(videoId: string, callback: (data: any) => void) {

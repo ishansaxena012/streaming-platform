@@ -1,5 +1,11 @@
 packages:
   - "apps/*"
 allowBuilds:
-  '@nestjs/core': set this to true or false
+  '@nestjs/core': false
+  '@prisma/engines': false
+  '@scarf/scarf': false
+  bcrypt: false
+  ffmpeg-static: false
+  msgpackr-extract: false
+  prisma: false
   unrs-resolver: set this to true or false

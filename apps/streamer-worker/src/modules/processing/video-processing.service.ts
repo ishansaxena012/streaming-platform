@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import * as path from "path";
 import * as fs from "fs";
 import ffmpeg from "fluent-ffmpeg";
-import ffmpegStatic from "ffmpeg-static";
+// import ffmpegStatic from "ffmpeg-static";
 import * as crypto from "crypto";
 
 export type HlsGenerationResult = {
@@ -12,11 +12,11 @@ export type HlsGenerationResult = {
 
 @Injectable()
 export class VideoProcessingService {
-  constructor() {
-    if (ffmpegStatic) {
-      ffmpeg.setFfmpegPath(ffmpegStatic);
-    }
-  }
+  // constructor() {
+  //   if (ffmpegStatic) {
+  //     ffmpeg.setFfmpegPath(ffmpegStatic);
+  //   }
+  // }
 
   async generateHls(
     localVideoPath: string,
@@ -43,22 +43,30 @@ export class VideoProcessingService {
             "[v720src]scale=w=1280:h=720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2[v720]",
 
           "-map [v240]",
+          "-map 0:a:0",
           "-c:v:0 libx264",
           "-b:v:0 400k",
           "-maxrate:v:0 500k",
           "-bufsize:v:0 800k",
 
           "-map [v480]",
+          "-map 0:a:0",
           "-c:v:1 libx264",
           "-b:v:1 1000k",
           "-maxrate:v:1 1200k",
           "-bufsize:v:1 2000k",
 
           "-map [v720]",
+          "-map 0:a:0",
           "-c:v:2 libx264",
           "-b:v:2 2500k",
           "-maxrate:v:2 3000k",
           "-bufsize:v:2 5000k",
+
+          "-c:a aac",
+          "-b:a 128k",
+          "-ac 2",
+          "-ar 44100",
 
           "-g 48",
           "-keyint_min 48",
@@ -75,7 +83,7 @@ export class VideoProcessingService {
           "master.m3u8",
 
           "-var_stream_map",
-          "v:0 v:1 v:2",
+          "v:0,a:0 v:1,a:1 v:2,a:2",
         ])
         .output(path.join(outputDir, "%v.m3u8"))
         .on("start", (cmd) => {

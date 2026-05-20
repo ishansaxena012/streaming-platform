@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 
 import * as fs from "fs";
 import * as path from "path";
+
 import {
   S3Client,
   GetObjectCommand,
@@ -12,10 +13,13 @@ import {
 export class S3Service {
   private readonly s3Client = new S3Client({
     region: process.env.AWS_REGION,
+
     credentials: {
       accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
     },
+
+    maxAttempts: 5,
   });
 
   async downloadFile(key: string, outputPath: string) {
@@ -41,16 +45,20 @@ export class S3Service {
   }
 
   async uploadFile(localPath: string, key: string, contentType: string) {
-    const fileStream = fs.createReadStream(localPath);
+    console.log("Uploading:", key);
+
+    const fileBuffer = fs.readFileSync(localPath);
 
     await this.s3Client.send(
       new PutObjectCommand({
         Bucket: process.env.S3_BUCKET_NAME,
         Key: key,
-        Body: fileStream,
+        Body: fileBuffer,
         ContentType: contentType,
       }),
     );
+
+    console.log("Uploaded:", key);
 
     return key;
   }
@@ -62,15 +70,29 @@ export class S3Service {
 
     for (const file of files) {
       const localPath = path.join(localDir, file);
+
+      if (!fs.statSync(localPath).isFile()) {
+        continue;
+      }
+
       const key = `${s3Prefix}/${file}`;
 
       const contentType = file.endsWith(".m3u8")
         ? "application/vnd.apple.mpegurl"
         : "video/MP2T";
 
-      await this.uploadFile(localPath, key, contentType);
+      try {
+        await this.uploadFile(localPath, key, contentType);
 
-      uploadedKeys.push(key);
+        uploadedKeys.push(key);
+
+        // Small delay for local stability
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error("Failed uploading file:", key, error);
+
+        throw error;
+      }
     }
 
     return uploadedKeys;

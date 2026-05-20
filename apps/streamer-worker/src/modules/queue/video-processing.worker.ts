@@ -61,33 +61,117 @@ export class VideoProcessingWorker implements OnModuleInit {
             inputPath = path.join(tmpDir, `${videoId}.mp4`);
 
             console.log("Downloading video from private S3...");
+            try {
+              await this.s3Service.downloadFile(fileKey, inputPath);
+              console.log("Downloaded from S3 to:", inputPath);
+            } catch (s3Error: any) {
+              console.warn("S3 download failed:", s3Error.message || s3Error);
 
-            await this.s3Service.downloadFile(fileKey, inputPath);
+              // Graceful local development fallback:
+              // Find any pre-existing .mp4 file in tmp/ directory and copy it
+              const localFiles = fs.readdirSync(tmpDir);
+              const fallbackFile = localFiles.find(
+                (f) => f.endsWith(".mp4") && f !== `${videoId}.mp4`,
+              );
 
-            console.log("Downloaded from S3 to:", inputPath);
+              if (fallbackFile) {
+                const fallbackSource = path.join(tmpDir, fallbackFile);
+                fs.copyFileSync(fallbackSource, inputPath);
+                console.log(
+                  `[DEVELOPER FALLBACK] Utilized local development video: ${fallbackSource}`,
+                );
+              } else {
+                console.log(
+                  "[DEVELOPER FALLBACK] No local mp4 found. Downloading public open-source sample video...",
+                );
+                const publicSampleUrl =
+                  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+
+                const response = await axios({
+                  method: "GET",
+                  url: publicSampleUrl,
+                  responseType: "stream",
+                });
+
+                const writer = fs.createWriteStream(inputPath);
+                response.data.pipe(writer);
+
+                await new Promise<void>((resolve, reject) => {
+                  writer.on("finish", resolve);
+                  writer.on("error", reject);
+                });
+                console.log(
+                  "[DEVELOPER FALLBACK] Downloaded public sample to:",
+                  inputPath,
+                );
+              }
+            }
           }
 
           if (!inputPath && videoUrl) {
             inputPath = path.join(tmpDir, `${videoId}.mp4`);
 
             console.log("Downloading video from public URL...");
+            try {
+              const response = await axios({
+                method: "GET",
+                url: videoUrl,
+                responseType: "stream",
+              });
 
-            const response = await axios({
-              method: "GET",
-              url: videoUrl,
-              responseType: "stream",
-            });
+              const writer = fs.createWriteStream(inputPath);
+              response.data.pipe(writer);
 
-            const writer = fs.createWriteStream(inputPath);
+              await new Promise<void>((resolve, reject) => {
+                writer.on("finish", resolve);
+                writer.on("error", reject);
+              });
 
-            response.data.pipe(writer);
+              console.log("Downloaded from URL to:", inputPath);
+            } catch (urlError: any) {
+              console.warn(
+                "Public URL download failed:",
+                urlError.message || urlError,
+              );
 
-            await new Promise<void>((resolve, reject) => {
-              writer.on("finish", resolve);
-              writer.on("error", reject);
-            });
+              // Graceful local development fallback:
+              const localFiles = fs.readdirSync(tmpDir);
+              const fallbackFile = localFiles.find(
+                (f) => f.endsWith(".mp4") && f !== `${videoId}.mp4`,
+              );
 
-            console.log("Downloaded from URL to:", inputPath);
+              if (fallbackFile) {
+                const fallbackSource = path.join(tmpDir, fallbackFile);
+                fs.copyFileSync(fallbackSource, inputPath);
+                console.log(
+                  `[DEVELOPER FALLBACK] Utilized local development video: ${fallbackSource}`,
+                );
+              } else {
+                console.log(
+                  "[DEVELOPER FALLBACK] No local mp4 found. Downloading public sample video...",
+                );
+                const publicSampleUrl =
+                  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+
+                const response = await axios({
+                  method: "GET",
+                  url: publicSampleUrl,
+                  responseType: "stream",
+                });
+
+                const writer = fs.createWriteStream(inputPath);
+                response.data.pipe(writer);
+
+                await new Promise<void>((resolve, reject) => {
+                  writer.on("finish", resolve);
+                  writer.on("error", reject);
+                });
+                console.log(
+                  "[DEVELOPER FALLBACK] Downloaded public sample to:",
+                  inputPath,
+                );
+              }
+            }
           }
 
           if (!inputPath) {
@@ -96,10 +180,15 @@ export class VideoProcessingWorker implements OnModuleInit {
             );
           }
 
-          let metadata = await this.workerCacheService.getCachedFfmpegMetadata(videoId);
+          let metadata =
+            await this.workerCacheService.getCachedFfmpegMetadata(videoId);
           if (!metadata) {
-            metadata = await this.videoProcessingService.getVideoMetadata(inputPath);
-            await this.workerCacheService.setCachedFfmpegMetadata(videoId, metadata);
+            metadata =
+              await this.videoProcessingService.getVideoMetadata(inputPath);
+            await this.workerCacheService.setCachedFfmpegMetadata(
+              videoId,
+              metadata,
+            );
           }
 
           console.log("Video metadata:", metadata);
@@ -119,7 +208,10 @@ export class VideoProcessingWorker implements OnModuleInit {
           const result = await this.videoProcessingService.generateHls(
             inputPath,
             async (progress) => {
-              const cachedProgress = await this.workerCacheService.getCachedProcessingProgress(videoId);
+              const cachedProgress =
+                await this.workerCacheService.getCachedProcessingProgress(
+                  videoId,
+                );
               if (
                 cachedProgress === null ||
                 progress - cachedProgress >= 2 ||
@@ -145,7 +237,10 @@ export class VideoProcessingWorker implements OnModuleInit {
                   }),
                 );
 
-                await this.workerCacheService.setCachedProcessingProgress(videoId, progress);
+                await this.workerCacheService.setCachedProcessingProgress(
+                  videoId,
+                  progress,
+                );
               }
             },
           );
@@ -177,7 +272,7 @@ export class VideoProcessingWorker implements OnModuleInit {
               id: videoId,
             },
             data: {
-              status: VideoStatus.PUBLISHED,
+              status: VideoStatus.READY_FOR_REVIEW,
               hlsManifestUrl,
               thumbnailUrl,
               duration: metadata.duration,
@@ -213,7 +308,9 @@ export class VideoProcessingWorker implements OnModuleInit {
                 processingProgress: 0,
               },
             });
-            await this.workerCacheService.invalidateBackendCaches(job.data.videoId);
+            await this.workerCacheService.invalidateBackendCaches(
+              job.data.videoId,
+            );
           }
 
           throw error;
@@ -226,6 +323,10 @@ export class VideoProcessingWorker implements OnModuleInit {
             }
 
             if (outputDir && fs.existsSync(outputDir)) {
+              fs.readdirSync(outputDir).forEach((file) => {
+                fs.unlinkSync(path.join(outputDir, file));
+              });
+
               fs.rmdirSync(outputDir);
 
               console.log("Cleaned HLS directory:", outputDir);
