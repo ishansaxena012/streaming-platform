@@ -8,4 +8,4 @@ allowBuilds:
   ffmpeg-static: false
   msgpackr-extract: false
   prisma: false
-  unrs-resolver: set this to true or false
+  unrs-resolver: true

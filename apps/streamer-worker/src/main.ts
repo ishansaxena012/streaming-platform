@@ -4,7 +4,7 @@ import { StreamerWorkerModule } from "./streamer-worker.module";
 
 async function bootstrap() {
   await NestFactory.createApplicationContext(StreamerWorkerModule);
-  console.log("Streamer Worker running...");
+  console.log("🚀 NEW WORKER BUILD");
 }
 
 bootstrap();
