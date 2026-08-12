@@ -6,8 +6,8 @@ import { loginSchema } from "../schemas/auth.schema";
 import type { LoginInput } from "../schemas/auth.schema";
 import { useAuthStore } from "../../../store/auth.store";
 import { ROUTES } from "../../../config/routes";
-import { APP_CONSTANTS } from "../../../config/constants";
 import { apiClient } from "../../../services/api-client";
+import { bootstrapSession } from "../lib/bootstrap-session";
 import { Loader2, Mail, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -48,7 +48,7 @@ export function LoginForm() {
       });
 
       const result = response as unknown as BackendAuthResponse;
-      
+
       const mappedUser = {
         id: result.user.id,
         email: result.user.email,
@@ -57,30 +57,14 @@ export function LoginForm() {
         createdAt: result.user.createdAt,
       };
 
-      // Provision mock browser profile records aligned with the logged-in user
-      const userProfiles = [
-        { 
-          id: "prof-primary", 
-          name: mappedUser.name, 
-          avatarUrl: APP_CONSTANTS.DEFAULT_AVATARS[0].url, 
-          isKids: false 
-        },
-        { 
-          id: "prof-kids", 
-          name: "Kids Zone", 
-          avatarUrl: APP_CONSTANTS.DEFAULT_AVATARS[2].url, 
-          isKids: true 
-        },
-      ];
+      const { refreshToken, profiles } = bootstrapSession(mappedUser);
+      login(mappedUser, result.token, refreshToken, profiles);
 
-      // Store tokens and mapped profile slots
-      login(mappedUser, result.token, "mock-refresh-token-" + Math.random().toString(36).substring(7), userProfiles);
-      
       toast.success(`Welcome back, ${mappedUser.name}!`);
       navigate(ROUTES.PROFILES);
     } catch (error: any) {
-      console.error("Login failure:", error);
-      toast.error(error.message || "Invalid email or password. Verify your local server is running.");
+      console.error("Login failed:", error);
+      toast.error(error.message || "Invalid email or password.");
     } finally {
       setLoading(false);
     }
@@ -94,11 +78,10 @@ export function LoginForm() {
     >
       <div className="space-y-1.5 text-center">
         <h2 className="text-2xl font-bold tracking-wide text-white">Sign In</h2>
-        <p className="text-xs text-cinema-gray">Access Portal cinematic catalog immediately</p>
+        <p className="text-xs text-cinema-gray">Welcome back to Marquee</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email Field */}
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cinema-gray group-focus-within:text-netflix-red transition-colors">
             <Mail className="w-4 h-4" />
@@ -114,7 +97,6 @@ export function LoginForm() {
           )}
         </div>
 
-        {/* Password Field */}
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cinema-gray group-focus-within:text-netflix-red transition-colors">
             <Lock className="w-4 h-4" />
@@ -130,7 +112,6 @@ export function LoginForm() {
           )}
         </div>
 
-        {/* Submit Button */}
         <motion.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
@@ -148,7 +129,7 @@ export function LoginForm() {
 
       <div className="text-center pt-2">
         <p className="text-cinema-gray text-xs">
-          New to Portal?{" "}
+          New to Marquee?{" "}
           <Link to={ROUTES.REGISTER} className="text-white font-bold hover:underline">
             Sign up now
           </Link>

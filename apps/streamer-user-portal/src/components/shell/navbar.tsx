@@ -67,13 +67,12 @@ export function Navbar() {
     >
       <div className="h-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 flex items-center justify-between">
         
-        {/* Left Side: Brand Logo + Horizontal Nav Directory */}
         <div className="flex items-center gap-8">
           <Link
             to={ROUTES.HOME}
-            className="text-2xl sm:text-3xl font-black tracking-wider text-netflix-red drop-shadow-[0_0_8px_rgba(229,9,20,0.3)] transition-transform hover:scale-103"
+            className="text-2xl sm:text-3xl font-black tracking-wide text-netflix-red drop-shadow-[0_0_8px_rgba(229,9,20,0.3)] transition-transform hover:scale-[1.03]"
           >
-            PORTAL
+            MARQUEE
           </Link>
           
           <nav className="hidden md:flex items-center gap-6 text-sm">
@@ -94,10 +93,7 @@ export function Navbar() {
           </nav>
         </div>
 
-        {/* Right Side: Actions (Search, Notifications, Profile Switcher) */}
         <div className="flex items-center gap-4 sm:gap-6">
-          
-          {/* Animated Search Panel */}
           <div className="relative flex items-center">
             <motion.div
               initial={false}
@@ -131,7 +127,6 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Notifications Popover */}
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setNotifOpen(!notifOpen)}
@@ -157,7 +152,7 @@ export function Navbar() {
                     </div>
                     <div className="border-b border-white/5 pb-2">
                       <p className="text-white font-medium">Subscription Invoice Paid</p>
-                      <p className="text-white/40 text-[10px] mt-0.5">Standard Portal billing success</p>
+                      <p className="text-white/40 text-[10px] mt-0.5">Your Standard plan payment went through</p>
                     </div>
                     <div>
                       <p className="text-white font-medium">Stranger Currents 5 Released</p>
@@ -169,7 +164,6 @@ export function Navbar() {
             </AnimatePresence>
           </div>
 
-          {/* Profile Picker Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -202,7 +196,7 @@ export function Navbar() {
                 >
                   <div className="px-3 py-2 border-b border-white/5 mb-1.5">
                     <p className="text-white font-bold truncate">{activeProfile?.name || "Viewer Profile"}</p>
-                    <p className="text-[10px] text-cinema-gray truncate">{user?.email || "viewer@portal.com"}</p>
+                    <p className="text-[10px] text-cinema-gray truncate">{user?.email || "viewer@marquee.app"}</p>
                   </div>
                   
                   <Link

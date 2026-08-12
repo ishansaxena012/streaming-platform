@@ -7,21 +7,21 @@ interface PlayerErrorFallbackProps {
   errorMsg?: string;
 }
 
-export function PlayerErrorFallback({ onRetry, errorMsg = "Decode or network stream failure occurred" }: PlayerErrorFallbackProps) {
+export function PlayerErrorFallback({ onRetry, errorMsg = "This video stopped unexpectedly" }: PlayerErrorFallbackProps) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-40 text-center px-4">
       <div className="max-w-md w-full p-6 glass-panel rounded-xl border border-netflix-red/10 space-y-5">
         <div className="inline-flex p-3 rounded-full bg-netflix-red/10 text-netflix-red border border-netflix-red/20">
           <AlertCircle className="w-8 h-8" />
         </div>
-        
+
         <div className="space-y-2">
-          <h3 className="text-lg font-bold text-white tracking-wide">Playback Interrupted</h3>
+          <h3 className="text-lg font-bold text-white tracking-wide">Playback interrupted</h3>
           <p className="text-cinema-gray text-xs leading-relaxed max-w-xs mx-auto">
-            {errorMsg}. Make sure your local internet settings are valid.
+            {errorMsg}. Check your connection and try again.
           </p>
         </div>
-        
+
         <div className="flex gap-4 max-w-xs mx-auto">
           <Link
             to={ROUTES.HOME}

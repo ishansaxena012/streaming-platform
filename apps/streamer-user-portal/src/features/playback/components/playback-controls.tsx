@@ -47,7 +47,6 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
 
-  // Auto-hide controls overlay on idle mouse
   useEffect(() => {
     let idleTimer: ReturnType<typeof setTimeout>;
     
@@ -117,7 +116,6 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
     }
   };
 
-  // Sync fullscreen state in case it triggers natively via keyboard ESC
   useEffect(() => {
     const handleFullscreenChange = () => {
       setFullscreen(!!document.fullscreenElement);
@@ -137,7 +135,6 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
           exit={{ opacity: 0 }}
           className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/70 flex flex-col justify-between p-4 sm:p-6 z-30 select-none text-white"
         >
-          {/* 1. Top Panel: Go back trigger and active metadata */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate(-1)}
@@ -145,16 +142,8 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            
-            <div className="space-y-0.5">
-              <span className="text-[9px] font-black tracking-widest text-netflix-red uppercase">Now Playing</span>
-              <h2 className="text-sm sm:text-base font-bold text-white/90 truncate max-w-[280px] sm:max-w-md">
-                Streaming Stream Feed
-              </h2>
-            </div>
           </div>
 
-          {/* 2. Middle Panels: Double-clickable sectors can support play toggles */}
           <div className="flex-grow flex items-center justify-center gap-8 text-white/95">
             <button
               onClick={() => handleSkip(-APP_CONSTANTS.PLAYBACK.SEEK_STEP_SECONDS)}
@@ -178,26 +167,21 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
             </button>
           </div>
 
-          {/* 3. Bottom panels: Scrub timeline progress & Controls */}
           <div className="space-y-4">
-            
-            {/* Scrub timeline scrubber */}
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-cinema-gray font-semibold">
                 <span>{formatDuration(currentTime)}</span>
                 <span>-{formatDuration(Math.max(0, duration - currentTime))}</span>
               </div>
-              
+
               <div className="relative group/timeline w-full flex items-center">
-                {/* Visual background timeline tracking */}
                 <div className="absolute inset-y-0 left-0 right-0 h-1.5 bg-white/25 rounded overflow-hidden pointer-events-none">
                   <div
                     className="h-full bg-netflix-red shadow-[0_0_8px_#E50914] rounded-r"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
-                
-                {/* True input scrub range */}
+
                 <input
                   type="range"
                   min={0}
@@ -209,12 +193,8 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
               </div>
             </div>
 
-            {/* Lower controls menu bar */}
             <div className="flex items-center justify-between">
-              
-              {/* Left Action Set: Play skips and Vol controls */}
               <div className="flex items-center gap-4 sm:gap-6 relative">
-                
                 <button
                   onClick={handlePlayToggle}
                   className="text-white hover:text-netflix-red transition-all transform hover:scale-110 cursor-pointer p-1"
@@ -222,7 +202,6 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
                   {playing ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current animate-pulse" />}
                 </button>
 
-                {/* Volume Scrub */}
                 <div
                   className="flex items-center gap-2"
                   onMouseEnter={() => setShowVolumeSlider(true)}
@@ -251,13 +230,9 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
                     />
                   </motion.div>
                 </div>
-
               </div>
 
-              {/* Right action sets: Speed multipliers, Quality, Subtitle options, Fullscreen */}
               <div className="flex items-center gap-4 sm:gap-5">
-                
-                {/* Speed Multiplier selectors */}
                 <div className="relative">
                   <button
                     onClick={() => setSettingsOpen(!settingsOpen)}
@@ -297,7 +272,6 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
                   </AnimatePresence>
                 </div>
 
-                {/* Subtitle toggler selector */}
                 <div className="relative group">
                   <button className="text-cinema-gray hover:text-white transition-all cursor-pointer p-1 flex items-center gap-1 text-xs font-bold">
                     <Languages className="w-5 h-5" />
@@ -305,20 +279,15 @@ export function PlaybackControls({ videoRef }: PlaybackControlsProps) {
                   </button>
                 </div>
 
-                {/* Fullscreen Expanders */}
                 <button
                   onClick={handleFullscreenToggle}
-                  className="text-cinema-gray hover:text-white transition-all transform hover:scale-115 cursor-pointer p-1"
+                  className="text-cinema-gray hover:text-white transition-all transform hover:scale-[1.15] cursor-pointer p-1"
                 >
                   {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
                 </button>
-
               </div>
-
             </div>
-
           </div>
-
         </motion.div>
       )}
     </AnimatePresence>

@@ -6,11 +6,9 @@ import { MovieRow } from "../features/recommendations/components/movie-row";
 import { PageLoader } from "../components/loading/page-loader";
 import { AlertCircle } from "lucide-react";
 
-// Import your official project Movie type right here
 import type { Movie } from "../types";
 
 export function HomePage() {
-  // Query 1: Fetch list of catalog movies using your official type
   const {
     data: movies = [],
     isLoading: moviesLoading,
@@ -20,7 +18,6 @@ export function HomePage() {
     queryFn: () => contentService.getMovies(),
   });
 
-  // Query 2: Fetch the featured spotlight film
   const {
     data: featuredMovie,
     isLoading: featuredLoading,
@@ -33,7 +30,6 @@ export function HomePage() {
   const isLoading = moviesLoading || featuredLoading;
   const hasError = moviesError || featuredError;
 
-  // Memoize data transformations using the official type definitions
   const { trendingMovies, sciFiMovies, actionMovies, awardWinners } =
     useMemo(() => {
       if (!movies.length) {
@@ -57,7 +53,6 @@ export function HomePage() {
         awardWinners: movies.filter((m) => {
           const numericRating =
             typeof m.rating === "string" ? parseFloat(m.rating) : m.rating;
-          // Using an optional chain check just in case matchPercentage isn't on all entries
           const matches =
             m.matchPercentage !== undefined ? m.matchPercentage : 0;
           return numericRating >= 8 || matches >= 95;
@@ -66,7 +61,7 @@ export function HomePage() {
     }, [movies]);
 
   if (isLoading) {
-    return <PageLoader message="Fetching Portal cinema catalog..." />;
+    return <PageLoader message="Loading your catalog..." />;
   }
 
   if (hasError || movies.length === 0) {
@@ -75,11 +70,10 @@ export function HomePage() {
         <AlertCircle className="w-12 h-12 text-netflix-red animate-pulse" />
         <div className="space-y-1">
           <h2 className="text-xl font-bold text-white">
-            Database Synchronization Failed
+            Couldn't load your catalog
           </h2>
           <p className="text-cinema-gray text-xs max-w-sm leading-relaxed">
-            We are experiencing backend connectivity delays. Verify NestJS
-            server is running.
+            Something went wrong on our end. Try refreshing the page in a moment.
           </p>
         </div>
       </div>
@@ -88,10 +82,8 @@ export function HomePage() {
 
   return (
     <div className="bg-[#08080C] min-h-screen pb-20 select-none">
-      {/* Immersive Spotlight Header Banner */}
       {featuredMovie && <HeroBillboard movie={featuredMovie} />}
 
-      {/* Categorized horizontal sliders rows */}
       <div
         className={`max-w-7xl mx-auto px-4 sm:px-6 md:px-8 relative z-30 space-y-6 sm:space-y-8 ${
           featuredMovie ? "mt-[-30px] sm:mt-[-50px]" : "mt-6"

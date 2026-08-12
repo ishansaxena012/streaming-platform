@@ -36,8 +36,6 @@ apiClient.interceptors.response.use(
     return resData;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config;
-    
     // Check if unauthorized
     if (error.response?.status === 401) {
       // Force logout since backend doesn't support refresh tokens yet

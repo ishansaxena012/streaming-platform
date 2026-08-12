@@ -4,7 +4,7 @@ interface PageLoaderProps {
   message?: string;
 }
 
-export function PageLoader({ message = "Allocating portal resources..." }: PageLoaderProps) {
+export function PageLoader({ message = "Loading..." }: PageLoaderProps) {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center bg-[#08080C] z-50 select-none">
       <motion.div
@@ -20,13 +20,12 @@ export function PageLoader({ message = "Allocating portal resources..." }: PageL
         }}
         className="flex flex-col items-center gap-4"
       >
-        <span className="text-4xl font-black tracking-widest bg-gradient-to-r from-netflix-red to-red-800 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(229,9,20,0.4)]">
-          PORTAL
+        <span className="text-4xl font-black tracking-wide bg-gradient-to-r from-netflix-red to-red-800 bg-clip-text text-transparent drop-shadow-[0_0_15px_rgba(229,9,20,0.4)]">
+          MARQUEE
         </span>
-        
-        {/* Neon buffer bar */}
+
         <div className="w-20 h-1 rounded bg-netflix-red shadow-[0_0_10px_#E50914]" />
-        
+
         {message && (
           <p className="text-[9px] text-cinema-gray font-bold tracking-widest uppercase mt-1 animate-pulse">
             {message}

@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+dist
+**/dist
+hls
+**/hls
+tmp
+**/tmp
+.git
+.npm
+npm-debug.log
+*.env

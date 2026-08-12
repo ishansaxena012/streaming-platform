@@ -41,10 +41,10 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             
             <div className="space-y-2">
               <h1 className="text-2xl font-bold tracking-tight text-white">
-                Systems Breakdown
+                Something went wrong
               </h1>
               <p className="text-cinema-gray text-sm leading-relaxed">
-                Portal encountered a critical render exception. Our engineers have been alerted.
+                This page hit an unexpected error. Try going back home — if it keeps happening, let us know.
               </p>
             </div>
 

@@ -25,7 +25,10 @@ import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: ['.env', 'apps/streamer-backend/.env'],
+    }),
     ThrottlerModule.forRoot([
       {
         ttl: 60000,

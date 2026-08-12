@@ -9,7 +9,6 @@ interface AppProvidersProps {
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <QueryProvider>
-      {/* Dynamic toast controller */}
       <Toaster
         position="top-right"
         theme="dark"

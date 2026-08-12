@@ -2,60 +2,45 @@ import { useState } from "react";
 import { useAuthStore } from "../store/auth.store";
 import { Link } from "react-router-dom";
 import { ROUTES } from "../config/routes";
-import { User, CreditCard, Shield, Sparkles, Check } from "lucide-react";
+import { User, CreditCard, Calendar, Sparkles, Check } from "lucide-react";
 import { toast } from "sonner";
 
 export function SettingsPage() {
   const { user, activeProfile, profiles } = useAuthStore();
   const [updating, setUpdating] = useState(false);
-  const [emailValue, setEmailValue] = useState(user?.email || "viewer@portal.com");
-  const [nameValue, setNameValue] = useState(user?.name || "Viewer");
+  const [emailValue, setEmailValue] = useState(user?.email || "");
+  const [nameValue, setNameValue] = useState(user?.name || "");
 
   const handleUpdateAccount = (e: React.FormEvent) => {
     e.preventDefault();
     setUpdating(true);
     setTimeout(() => {
       setUpdating(false);
-      toast.success("Account metrics successfully updated!");
+      toast.success("Your changes have been saved.");
     }, 700);
   };
 
   return (
     <div className="bg-[#08080C] min-h-[80vh] py-12 px-4 sm:px-6 md:px-8 select-none text-white">
       <div className="max-w-4xl mx-auto space-y-8">
-        
-        {/* Onboarding Heading */}
         <div className="space-y-1">
-          <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight">Account Settings</h2>
-          <p className="text-xs sm:text-sm text-cinema-gray">Manage credentials, profile statistics, and active subscriptions.</p>
+          <h2 className="text-2xl sm:text-4xl font-bold tracking-tight">Account Settings</h2>
+          <p className="text-xs sm:text-sm text-cinema-gray">Manage your profile, credentials, and subscription.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
-          
-          {/* Left panel options: Quick links */}
           <div className="space-y-4">
-            
             <div className="glass-panel p-5 rounded-2xl border border-white/5 space-y-4">
-              <span className="text-[10px] font-black uppercase tracking-wider text-cinema-gray">System Status</span>
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded bg-netflix-red/10 border border-netflix-red/20 text-netflix-red">
-                  <Shield className="w-5 h-5" />
+                  <Calendar className="w-5 h-5" />
                 </div>
                 <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-white">Security Rating</p>
-                  <p className="text-[10px] text-green-500 font-extrabold uppercase">Premium Core Valid</p>
+                  <p className="text-xs font-bold text-white">Member since</p>
+                  <p className="text-[10px] text-cinema-gray font-semibold">
+                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : new Date().toLocaleDateString()}
+                  </p>
                 </div>
-              </div>
-              
-              <div className="h-px bg-white/5" />
-              
-              <div className="space-y-2">
-                <p className="text-[10px] text-cinema-gray font-semibold leading-relaxed">
-                  Active member since: {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : new Date().toLocaleDateString()}
-                </p>
-                <p className="text-[10px] text-cinema-gray font-semibold">
-                  Unique User Token ID: <span className="font-mono text-[9px] text-white/55">{user?.id || "usr-stub"}</span>
-                </p>
               </div>
             </div>
 
@@ -66,29 +51,25 @@ export function SettingsPage() {
               <div className="flex items-center gap-3">
                 <CreditCard className="w-5 h-5 text-cinema-gray group-hover:text-white transition-colors" />
                 <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-white">Upgrade Plan</p>
-                  <p className="text-[10px] text-cinema-gray font-semibold">Switch resolve tier parameters</p>
+                  <p className="text-xs font-bold text-white">Subscription</p>
+                  <p className="text-[10px] text-cinema-gray font-semibold">View or change your plan</p>
                 </div>
               </div>
-              <span className="text-[10px] text-netflix-red font-bold uppercase group-hover:underline">Update</span>
+              <span className="text-[10px] text-netflix-red font-bold group-hover:underline">Manage</span>
             </Link>
-
           </div>
 
-          {/* Right panel details: Form settings */}
           <div className="md:col-span-2 space-y-6">
-            
-            {/* Account Credentials Form */}
             <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 space-y-6">
-              <h3 className="text-base sm:text-lg font-extrabold flex items-center gap-2">
+              <h3 className="text-base sm:text-lg font-bold flex items-center gap-2">
                 <User className="w-5 h-5 text-netflix-red" />
-                Personal Profile Metrics
+                Profile
               </h3>
-              
+
               <form onSubmit={handleUpdateAccount} className="space-y-4 text-xs font-semibold text-cinema-gray">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-wider">Account Holder Name</label>
+                    <label className="text-[10px]">Name</label>
                     <input
                       type="text"
                       value={nameValue}
@@ -97,7 +78,7 @@ export function SettingsPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-wider">Email Address</label>
+                    <label className="text-[10px]">Email</label>
                     <input
                       type="email"
                       value={emailValue}
@@ -111,22 +92,21 @@ export function SettingsPage() {
                   <button
                     type="submit"
                     disabled={updating}
-                    className="py-2.5 px-6 rounded-md bg-netflix-red hover:bg-red-700 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider cursor-pointer shadow-lg shadow-netflix-red/10 active:scale-95 transition-all"
+                    className="py-2.5 px-6 rounded-md bg-netflix-red hover:bg-red-700 disabled:opacity-50 text-white font-bold text-xs cursor-pointer shadow-lg shadow-netflix-red/10 active:scale-95 transition-all"
                   >
-                    {updating ? "Saving Changes..." : "Save Account Settings"}
+                    {updating ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </form>
             </div>
 
-            {/* Profile avatars overview */}
             <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 space-y-6">
               <div className="flex justify-between items-center">
-                <h3 className="text-base sm:text-lg font-extrabold flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-bold flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-netflix-red" />
-                  Active Profiles ({profiles.length})
+                  Profiles ({profiles.length})
                 </h3>
-                <Link to={ROUTES.PROFILES} className="text-xs text-netflix-red font-bold hover:underline uppercase tracking-wider">
+                <Link to={ROUTES.PROFILES} className="text-xs text-netflix-red font-bold hover:underline">
                   Manage
                 </Link>
               </div>

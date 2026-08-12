@@ -6,8 +6,8 @@ import { registerSchema } from "../schemas/auth.schema";
 import type { RegisterInput } from "../schemas/auth.schema";
 import { useAuthStore } from "../../../store/auth.store";
 import { ROUTES } from "../../../config/routes";
-import { APP_CONSTANTS } from "../../../config/constants";
 import { apiClient } from "../../../services/api-client";
+import { bootstrapSession } from "../lib/bootstrap-session";
 import { Loader2, Mail, Lock, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -49,7 +49,7 @@ export function RegisterForm() {
       });
 
       const result = response as unknown as BackendRegisterResponse;
-      
+
       const mappedUser = {
         id: result.user.id,
         email: result.user.email,
@@ -58,30 +58,14 @@ export function RegisterForm() {
         createdAt: result.user.createdAt,
       };
 
-      // Provision initial browser profile slots matching the new user's credentials
-      const userProfiles = [
-        { 
-          id: "prof-primary", 
-          name: mappedUser.name, 
-          avatarUrl: APP_CONSTANTS.DEFAULT_AVATARS[0].url, 
-          isKids: false 
-        },
-        { 
-          id: "prof-kids", 
-          name: "Kids Zone", 
-          avatarUrl: APP_CONSTANTS.DEFAULT_AVATARS[2].url, 
-          isKids: true 
-        },
-      ];
+      const { refreshToken, profiles } = bootstrapSession(mappedUser);
+      login(mappedUser, result.token, refreshToken, profiles);
 
-      // Automatically sign in the newly registered account
-      login(mappedUser, result.token, "mock-refresh-token-" + Math.random().toString(36).substring(7), userProfiles);
-      
       toast.success("Account created successfully!");
       navigate(ROUTES.PROFILES);
     } catch (error: any) {
-      console.error("Registration failure:", error);
-      toast.error(error.message || "Could not register account. Check connection or verify if email exists.");
+      console.error("Registration failed:", error);
+      toast.error(error.message || "Couldn't create your account. That email may already be in use.");
     } finally {
       setLoading(false);
     }
@@ -95,11 +79,10 @@ export function RegisterForm() {
     >
       <div className="space-y-1.5 text-center">
         <h2 className="text-2xl font-bold tracking-wide text-white">Create Account</h2>
-        <p className="text-xs text-cinema-gray">Join Portal and stream movies in Ultra HD</p>
+        <p className="text-xs text-cinema-gray">Join Marquee and start streaming in minutes</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Name Field */}
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cinema-gray group-focus-within:text-netflix-red transition-colors">
             <User className="w-4 h-4" />
@@ -115,7 +98,6 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Email Field */}
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cinema-gray group-focus-within:text-netflix-red transition-colors">
             <Mail className="w-4 h-4" />
@@ -131,7 +113,6 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Password Field */}
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cinema-gray group-focus-within:text-netflix-red transition-colors">
             <Lock className="w-4 h-4" />
@@ -147,7 +128,6 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Confirm Password Field */}
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cinema-gray group-focus-within:text-netflix-red transition-colors">
             <Lock className="w-4 h-4" />
@@ -163,7 +143,6 @@ export function RegisterForm() {
           )}
         </div>
 
-        {/* Submit Onboard */}
         <motion.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}

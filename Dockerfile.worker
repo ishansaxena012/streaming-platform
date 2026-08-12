@@ -1,0 +1,69 @@
+# Build stage
+FROM node:22-slim AS builder
+
+WORKDIR /app
+
+# Install pnpm and nest cli globally, and openssl for Prisma
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN npm install -g pnpm @nestjs/cli
+
+# Copy root lockfiles and workspaces
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+
+# Copy all packages/apps package.json files to cache dependency installation
+COPY apps/streamer-backend/package.json ./apps/streamer-backend/
+COPY apps/streamer-worker/package.json ./apps/streamer-worker/
+COPY apps/streamer-user-portal/package.json ./apps/streamer-user-portal/
+
+# Configure pnpm network limits and retries to handle connection resets
+RUN pnpm config set fetch-retries 10 && \
+    pnpm config set fetch-retry-mintimeout 20000 && \
+    pnpm config set fetch-retry-maxtimeout 120000 && \
+    pnpm config set network-concurrency 4
+
+# Install dependencies (forcing no-frozen-lockfile check via environment variable)
+RUN npm_config_frozen_lockfile=false pnpm install
+
+# Copy the rest of the application code
+COPY . .
+
+# Generate Prisma Client (so build succeeds)
+RUN npx prisma generate --schema=apps/streamer-backend/prisma/schema.prisma
+
+# Build the worker project
+RUN npm run build:worker
+
+# Prune development dependencies to keep image size small
+# Note: prune recreates node_modules and deletes the generated Prisma Client
+RUN CI=true pnpm prune --prod
+
+# Generate Prisma Client AFTER prune so it survives in node_modules
+RUN npx prisma generate --schema=apps/streamer-backend/prisma/schema.prisma
+
+# Production runner stage
+FROM node:22-slim AS runner
+
+# Install openssl (required by Prisma engines)
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy statically compiled ffmpeg and ffprobe from official static-ffmpeg image
+# This avoids running apt-get, downloading 130MB+ of packages, and network speed issues.
+COPY --from=mwader/static-ffmpeg:latest /ffmpeg /usr/local/bin/
+COPY --from=mwader/static-ffmpeg:latest /ffprobe /usr/local/bin/
+
+# Copy root configurations and pruned node_modules
+COPY --from=builder /app/package.json /app/pnpm-lock.yaml /app/pnpm-workspace.yaml ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/apps/streamer-backend/prisma ./apps/streamer-backend/prisma
+
+# Set production environment variables
+ENV NODE_ENV=production
+
+# Use non-root user for security
+USER node
+
+# Start worker application
+CMD ["node", "dist/apps/streamer-worker/main.js"]

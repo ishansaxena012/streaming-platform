@@ -15,7 +15,6 @@ export function ProfileSelect() {
   const [newProfileName, setNewProfileName] = useState("");
   const [newProfileIsKids, setNewProfileIsKids] = useState(false);
   
-  // Explicitly wide to string to avoid literal union mismatches from constants
   const [selectedAvatarUrl, setSelectedAvatarUrl] = useState<string>(APP_CONSTANTS.DEFAULT_AVATARS[0].url);
 
   const handleSelectProfile = (profile: any) => {
@@ -45,8 +44,7 @@ export function ProfileSelect() {
 
     addProfile(newProfile);
     toast.success("Profile created successfully!");
-    
-    // Reset Form
+
     setNewProfileName("");
     setNewProfileIsKids(false);
     setShowAddModal(false);
@@ -61,8 +59,6 @@ export function ProfileSelect() {
   return (
     <div className="min-h-screen bg-[#08080C] text-white flex flex-col items-center justify-center py-12 px-6 select-none">
       <div className="max-w-4xl w-full text-center space-y-10">
-        
-        {/* Onboarding Heading Title */}
         <div className="space-y-3">
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-wide text-white">
             {isManaging ? "Manage Profiles" : "Who's watching?"}
@@ -72,7 +68,6 @@ export function ProfileSelect() {
           </p>
         </div>
 
-        {/* Profile Avatars Grid Cards */}
         <div className="flex flex-wrap justify-center gap-8 sm:gap-10 py-6">
           {profiles.map((profile) => (
             <motion.div
@@ -82,15 +77,13 @@ export function ProfileSelect() {
               whileHover={{ scale: isManaging ? 1 : 1.05 }}
               whileTap={{ scale: 0.98 }}
             >
-              {/* Profile Card Frame */}
               <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-lg overflow-hidden border-2 border-transparent group-hover:border-white transition-all shadow-xl relative">
                 <img
                   src={profile.avatarUrl}
                   alt={profile.name}
-                  className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-350"
+                  className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
                 />
-                
-                {/* Delete / Edit overlay inside management toggles */}
+
                 {isManaging && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center gap-2">
                     <button
@@ -102,7 +95,6 @@ export function ProfileSelect() {
                   </div>
                 )}
 
-                {/* Kids Tag Indicator */}
                 {profile.isKids && (
                   <span className="absolute bottom-1 right-1 bg-amber-500 text-black font-extrabold text-[8px] px-1.5 py-0.5 rounded uppercase tracking-wider shadow-md">
                     Kids
@@ -110,14 +102,12 @@ export function ProfileSelect() {
                 )}
               </div>
               
-              {/* Profile Name */}
               <span className="text-sm sm:text-base text-cinema-gray group-hover:text-white transition-colors truncate max-w-[120px] font-semibold">
                 {profile.name}
               </span>
             </motion.div>
           ))}
 
-          {/* Add Profile placeholder card */}
           {profiles.length < APP_CONSTANTS.MAX_PROFILES && (
             <motion.div
               onClick={() => setShowAddModal(true)}
@@ -133,10 +123,8 @@ export function ProfileSelect() {
               </span>
             </motion.div>
           )}
-
         </div>
 
-        {/* Action controllers buttons */}
         <div className="pt-6">
           <button
             onClick={() => setIsManaging(!isManaging)}
@@ -148,7 +136,6 @@ export function ProfileSelect() {
 
       </div>
 
-      {/* Onboarding Profile Add Overlay Modal */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div
@@ -166,19 +153,17 @@ export function ProfileSelect() {
               <h3 className="text-xl font-bold tracking-wide text-white">Create New Profile</h3>
               
               <div className="space-y-4">
-                {/* Profile Name Inputs */}
                 <div className="space-y-1.5">
-                  <label className="text-xs text-cinema-gray font-bold uppercase tracking-wider">Profile Name</label>
+                  <label className="text-xs text-cinema-gray font-semibold">Profile name</label>
                   <input
                     type="text"
                     value={newProfileName}
                     onChange={(e) => setNewProfileName(e.target.value)}
-                    placeholder="Enter profile title..."
+                    placeholder="e.g. Alex"
                     className="w-full bg-white/5 border border-white/10 rounded-lg py-2.5 px-4 text-xs text-white placeholder-cinema-gray focus:outline-none focus:border-netflix-red focus:bg-white/[0.08]"
                   />
                 </div>
 
-                {/* Kids Tag Toggle checkbox */}
                 <div className="flex items-center gap-3 py-1">
                   <input
                     type="checkbox"
@@ -188,20 +173,19 @@ export function ProfileSelect() {
                     className="w-4 h-4 rounded accent-netflix-red focus:ring-0 cursor-pointer"
                   />
                   <label htmlFor="isKidsCheckbox" className="text-xs text-white/90 font-semibold cursor-pointer">
-                    Is this a Kids viewing profile?
+                    This is a kids profile
                   </label>
                 </div>
 
-                {/* Avatar Icon select grid */}
                 <div className="space-y-2">
-                  <label className="text-xs text-cinema-gray font-bold uppercase tracking-wider block">Select Avatar</label>
+                  <label className="text-xs text-cinema-gray font-semibold block">Avatar</label>
                   <div className="flex gap-4 overflow-x-auto py-1">
                     {APP_CONSTANTS.DEFAULT_AVATARS.map((avatar) => (
                       <div
                         key={avatar.name}
                         onClick={() => setSelectedAvatarUrl(avatar.url)}
                         className={`w-14 h-14 sm:w-16 sm:h-16 rounded-md overflow-hidden flex-shrink-0 cursor-pointer relative border-2 transition-all ${
-                          selectedAvatarUrl === avatar.url ? "border-netflix-red scale-103 shadow-lg shadow-netflix-red/20" : "border-transparent"
+                          selectedAvatarUrl === avatar.url ? "border-netflix-red scale-[1.03] shadow-lg shadow-netflix-red/20" : "border-transparent"
                         }`}
                       >
                         <img src={avatar.url} alt={avatar.name} className="w-full h-full object-cover" />
@@ -214,10 +198,8 @@ export function ProfileSelect() {
                     ))}
                   </div>
                 </div>
-
               </div>
 
-              {/* Form buttons */}
               <div className="flex gap-4 pt-2">
                 <button
                   onClick={() => setShowAddModal(false)}

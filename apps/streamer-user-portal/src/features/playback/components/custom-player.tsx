@@ -35,7 +35,6 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
 
   useEffect(() => {
     setVideoId(videoId);
-    // Reset tracker references on video changes
     lastSyncedTimeRef.current = 0;
     currentTimeRef.current = 0;
     return () => {
@@ -43,7 +42,6 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
     };
   }, [videoId, setVideoId, resetPlayback]);
 
-  // Heartbeat progress synchronizer method to secure playback positioning
   const syncProgress = (completed = false) => {
     const time = currentTimeRef.current;
     if (time === 0 && !completed) return;
@@ -54,7 +52,7 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
     lastSyncedTimeRef.current = time;
   };
 
-  // Sync heartbeat exactly every 15 seconds of playing time to prevent server exhaustion
+  // 15s cadence keeps progress roughly in sync without hammering the API
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
 
@@ -71,7 +69,6 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
     };
   }, [playing, videoId]);
 
-  // Synchronize watch progress on component unmount (e.g. route transitions)
   useEffect(() => {
     return () => {
       const finalTime = currentTimeRef.current;
@@ -88,7 +85,6 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
     setBuffering(true);
     setErrorMsg(null);
 
-    // Clean up pre-existing HLS instance
     if (hlsRef.current) {
       hlsRef.current.destroy();
       hlsRef.current = null;
@@ -119,27 +115,27 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
               hls.recoverMediaError();
               break;
             case Hls.ErrorTypes.NETWORK_ERROR:
-              setErrorMsg("Network transmission disrupted while fetching streaming chunks");
+              setErrorMsg("Lost connection while streaming");
               hls.destroy();
               break;
             default:
-              setErrorMsg("A fatal media decoding breakdown occurred");
+              setErrorMsg("This video couldn't be played");
               hls.destroy();
               break;
           }
         }
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // Fallback for native Safari HLS
+      // Safari plays HLS natively, without hls.js
       video.src = streamUrl;
       video.addEventListener("loadedmetadata", () => {
         setBuffering(false);
       });
       video.addEventListener("error", () => {
-        setErrorMsg("Native HLS stream playback failed");
+        setErrorMsg("This video couldn't be played");
       });
     } else {
-      setErrorMsg("Your browser is incompatible with HLS streaming files");
+      setErrorMsg("Your browser doesn't support video streaming");
     }
   };
 
@@ -153,7 +149,6 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
     };
   }, [streamUrl]);
 
-  // Synchronize playing states
   useEffect(() => {
     const video = videoRef.current;
     if (!video || buffering) return;
@@ -165,7 +160,6 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
     }
   }, [playing, buffering]);
 
-  // Synchronize playback speeds
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
@@ -173,7 +167,6 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
     }
   }, [playbackRate]);
 
-  // Synchronize sound settings
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
@@ -200,7 +193,6 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
   const handleWaiting = () => setBuffering(true);
   const handlePlaying = () => setBuffering(false);
 
-  // Sync progress immediately when player is paused or reaches the end
   const handlePause = () => {
     setPlaying(false);
     syncProgress(false);
@@ -208,13 +200,11 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
 
   const handleEnded = () => {
     setPlaying(false);
-    syncProgress(true); // Completed!
+    syncProgress(true);
   };
 
   return (
     <div className="relative w-full h-screen bg-black overflow-hidden flex items-center justify-center">
-      
-      {/* HTML5 standard media ref */}
       <video
         ref={videoRef}
         onTimeUpdate={handleTimeUpdate}
@@ -228,15 +218,11 @@ export function CustomPlayer({ streamUrl, videoId }: CustomPlayerProps) {
         playsInline
       />
 
-      {/* Buffering Indicator */}
-      {buffering && !errorMsg && <PlayerLoader message="Synchronizing stream buffers..." />}
+      {buffering && !errorMsg && <PlayerLoader message="Buffering..." />}
 
-      {/* Decoder Error Panel */}
       {errorMsg && <PlayerErrorFallback onRetry={loadStream} errorMsg={errorMsg} />}
 
-      {/* Exquisite Overlay Controls Layer */}
       <PlaybackControls videoRef={videoRef} />
-
     </div>
   );
 }

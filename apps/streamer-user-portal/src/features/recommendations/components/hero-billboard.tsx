@@ -20,46 +20,39 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
 
   return (
     <div className="relative w-full h-[65vh] sm:h-[85vh] bg-black overflow-hidden select-none">
-      
-      {/* Background Cover Art with bottom shadow fade */}
       <div className="absolute inset-0">
         <img
           src={movie.thumbnailUrl}
           alt={movie.title}
-          className="w-full h-full object-cover scale-102 filter brightness-[0.7] contrast-[1.05]"
+          className="w-full h-full object-cover scale-[1.02] filter brightness-[0.7] contrast-[1.05]"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#08080C] via-[#08080C]/40 to-black/50" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#08080C]/80 via-transparent to-transparent" />
       </div>
 
-      {/* Billboards Contents */}
       <div className="absolute bottom-[10%] sm:bottom-[15%] left-4 sm:left-12 md:left-16 max-w-xl space-y-4 z-20 px-2 sm:px-0">
-        
-        {/* Quality indicator tags */}
         <div className="flex gap-2 items-center">
           <span className="bg-netflix-red text-white text-[9px] font-black tracking-wider py-0.5 px-2 rounded uppercase shadow-md select-none">
             Spotlight
           </span>
           <div className="flex gap-1.5 items-center">
             {movie.qualityTags?.map((tag) => (
-              <span key={tag} className="border border-white/25 text-white/80 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.2 rounded bg-black/40">
+              <span key={tag} className="border border-white/25 text-white/80 text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-black/40">
                 {tag}
               </span>
             ))}
           </div>
         </div>
 
-        {/* Dynamic Title Slide in */}
         <motion.h1
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-tight uppercase"
+          className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-tight"
         >
           {movie.title}
         </motion.h1>
 
-        {/* Synopsis Summary */}
         <motion.p
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -69,14 +62,12 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
           {movie.description}
         </motion.p>
 
-        {/* Actions Button Bar */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
           className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2"
         >
-          {/* Play */}
           <button
             onClick={handlePlay}
             className="flex items-center justify-center gap-2 py-2.5 sm:py-3 px-6 sm:px-8 rounded-md bg-white hover:bg-white/90 text-black font-extrabold text-xs sm:text-sm transition-all shadow-xl active:scale-95 cursor-pointer uppercase tracking-wider"
@@ -85,7 +76,6 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
             Play Trailer
           </button>
 
-          {/* More Info */}
           <button
             onClick={() => setInfoOpen(true)}
             className="flex items-center justify-center gap-2 py-2.5 sm:py-3 px-5 sm:px-6 rounded-md bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs sm:text-sm transition-all shadow-xl active:scale-95 border border-white/10 cursor-pointer uppercase tracking-wider backdrop-blur-sm"
@@ -97,7 +87,6 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
 
       </div>
 
-      {/* Floating Mute Trigger */}
       <div className="absolute bottom-[10%] sm:bottom-[15%] right-6 sm:right-16 z-20 hidden sm:flex items-center gap-3">
         <button
           onClick={() => setMuted(!muted)}
@@ -110,7 +99,6 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
         </span>
       </div>
 
-      {/* More Info Popups Drawer Modal */}
       <AnimatePresence>
         {infoOpen && (
           <motion.div
@@ -125,7 +113,6 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
               exit={{ y: 50, opacity: 0 }}
               className="max-w-xl w-full glass-panel-heavy rounded-2xl border border-white/10 overflow-hidden shadow-2xl"
             >
-              {/* Header Image cover */}
               <div className="relative aspect-[16/9] w-full bg-black">
                 <img src={movie.thumbnailUrl} alt={movie.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#121217] to-black/20" />
@@ -138,7 +125,7 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
                 </button>
                 
                 <div className="absolute bottom-4 left-6 space-y-1.5">
-                  <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-wide">{movie.title}</h3>
+                  <h3 className="text-xl sm:text-2xl font-black text-white">{movie.title}</h3>
                   <div className="flex gap-2 items-center">
                     <span className="text-green-500 font-bold text-xs">{movie.matchPercentage}% Match</span>
                     <span className="text-white/60 text-xs font-semibold">{movie.releaseYear}</span>
@@ -147,12 +134,11 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
                 </div>
               </div>
 
-              {/* Specs body list */}
               <div className="p-6 space-y-4 text-xs sm:text-sm">
                 <p className="text-white/90 leading-relaxed font-semibold">{movie.description}</p>
-                
+
                 <div className="h-px bg-white/5 my-4" />
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div className="space-y-2">
                     <p className="text-cinema-gray">
@@ -166,12 +152,8 @@ export function HeroBillboard({ movie }: HeroBillboardProps) {
                   </div>
                   <div className="space-y-2">
                     <p className="text-cinema-gray">
-                      <span className="font-bold text-white/55 mr-1.5">Starring Cast:</span>
+                      <span className="font-bold text-white/55 mr-1.5">Cast:</span>
                       <span className="text-white/90 font-bold">{movie.cast.join(", ")}</span>
-                    </p>
-                    <p className="text-cinema-gray flex items-center gap-1.5">
-                      <span className="font-bold text-white/55">Quality Specs:</span>
-                      <span className="text-green-500 font-black">Ultra HD 4K Enabled</span>
                     </p>
                   </div>
                 </div>

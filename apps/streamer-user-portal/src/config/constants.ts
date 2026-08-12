@@ -1,8 +1,7 @@
 export const APP_CONSTANTS = {
-  APP_NAME: "Portal OTT",
+  APP_NAME: "Marquee",
   MAX_PROFILES: 4,
   SEARCH_DEBOUNCE_MS: 300,
-  MOCK_DELAY_MS: 600,
   DEFAULT_AVATARS: [
     { name: "Falcon", url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80", color: "#E50914" },
     { name: "Phoenix", url: "https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=150&h=150&q=80", color: "#1E3A8A" },

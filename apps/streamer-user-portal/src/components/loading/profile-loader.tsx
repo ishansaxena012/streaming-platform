@@ -1,10 +1,8 @@
 export function ProfileLoader() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-10">
-      {/* Title Shimmer */}
       <div className="w-80 h-10 rounded shimmer-bg" style={{ animationDuration: "2s" }} />
-      
-      {/* Profiles Shimmer Slots */}
+
       <div className="flex flex-wrap justify-center gap-8">
         {Array.from({ length: 3 }).map((_, idx) => (
           <div key={idx} className="flex flex-col items-center gap-4">

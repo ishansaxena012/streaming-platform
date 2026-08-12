@@ -10,13 +10,6 @@ export class PrismaService
 {
   constructor() {
     const connectionString = process.env.DATABASE_URL;
-    console.log(
-      '✅ DATABASE_URL loaded:',
-      connectionString
-        ? connectionString.substring(0, 20) + '...'
-        : 'UNDEFINED',
-    );
-
     const pool = new Pool({ connectionString });
     const adapter = new PrismaPg(pool);
     super({ adapter });

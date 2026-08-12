@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuthStore } from "../store/auth.store";
-import { MOCK_PLANS } from "../lib/mock-data";
+import { SUBSCRIPTION_PLANS } from "../lib/plans";
 import { Check, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ export function SubscriptionPage() {
   const [subscribing, setSubscribing] = useState(false);
 
   const handleUpdateSubscription = async () => {
-    const selectedPlan = MOCK_PLANS.find((p: SubscriptionPlan) => p.id === selectedPlanId);
+    const selectedPlan = SUBSCRIPTION_PLANS.find((p: SubscriptionPlan) => p.id === selectedPlanId);
     if (!selectedPlan) return;
 
     setSubscribing(true);
@@ -31,10 +31,10 @@ export function SubscriptionPage() {
         subscriptionPlanId: selectedPlanId,
       });
 
-      toast.success(`Subscription successfully updated to ${selectedPlan.name}!`);
+      toast.success(`You're now on the ${selectedPlan.name} plan!`);
     } catch (error: any) {
-      console.error("Subscription upgrade failure:", error);
-      toast.error(error.message || "Failed to update subscription. Verify server connection.");
+      console.error("Subscription upgrade failed:", error);
+      toast.error(error.message || "Something went wrong updating your plan. Please try again.");
     } finally {
       setSubscribing(false);
     }
@@ -43,8 +43,6 @@ export function SubscriptionPage() {
   return (
     <div className="bg-[#08080C] min-h-[80vh] py-12 px-4 sm:px-6 md:px-8 select-none">
       <div className="max-w-5xl mx-auto space-y-12">
-        
-        {/* Onboarding header summaries */}
         <div className="text-center space-y-3">
           <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
             Choose the plan that's right for you
@@ -54,23 +52,21 @@ export function SubscriptionPage() {
           </p>
         </div>
 
-        {/* Pricing tiers grid layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 pt-4">
-          {MOCK_PLANS.map((plan: SubscriptionPlan) => {
+          {SUBSCRIPTION_PLANS.map((plan: SubscriptionPlan) => {
             const isSelected = selectedPlanId === plan.id;
-            
+
             return (
               <motion.div
                 key={plan.id}
                 onClick={() => setSelectedPlanId(plan.id)}
                 className={`glass-panel p-6 sm:p-8 rounded-2xl border transition-all cursor-pointer relative flex flex-col justify-between space-y-6 ${
                   isSelected
-                    ? "border-netflix-red shadow-[0_0_30px_rgba(229,9,20,0.15)] bg-white/[0.03] scale-102"
+                    ? "border-netflix-red shadow-[0_0_30px_rgba(229,9,20,0.15)] bg-white/[0.03] scale-[1.02]"
                     : "border-white/5 hover:border-white/20"
                 }`}
                 whileHover={{ y: -5 }}
               >
-                {/* Popularity indicator card tag */}
                 {plan.id === "standard-plan" && (
                   <span className="absolute top-[-12px] left-1/2 transform -translate-x-1/2 bg-netflix-red text-white text-[9px] font-black py-1 px-3 rounded-full uppercase tracking-wider shadow-lg flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
@@ -78,7 +74,6 @@ export function SubscriptionPage() {
                   </span>
                 )}
 
-                {/* Cover info */}
                 <div className="space-y-4">
                   <div className="space-y-1">
                     <h3 className="text-xl font-extrabold text-white">{plan.name}</h3>
@@ -90,8 +85,7 @@ export function SubscriptionPage() {
                   </div>
 
                   <div className="h-px bg-white/5" />
-                  
-                  {/* Features checks list */}
+
                   <ul className="space-y-3.5 text-xs text-cinema-gray font-semibold">
                     {plan.features.map((feature: string, idx: number) => (
                       <li key={idx} className="flex items-center gap-3 text-white/95">
@@ -102,7 +96,6 @@ export function SubscriptionPage() {
                   </ul>
                 </div>
 
-                {/* Select Radio indicators */}
                 <div className="pt-2">
                   <div
                     className={`w-full py-2.5 rounded-lg text-center font-bold text-xs uppercase tracking-wider border transition-all cursor-pointer ${
@@ -120,12 +113,11 @@ export function SubscriptionPage() {
           })}
         </div>
 
-        {/* Subscription confirmation action bar */}
         <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="space-y-1 text-center md:text-left">
-            <h4 className="font-bold text-white text-sm sm:text-base">Membership Summary</h4>
+            <h4 className="font-bold text-white text-sm sm:text-base">Your membership</h4>
             <p className="text-xs text-cinema-gray max-w-md leading-relaxed font-semibold">
-              Currently logged in as <span className="text-white font-bold">{user?.email}</span>. Click update to activate selected tier parameters immediately.
+              Signed in as <span className="text-white font-bold">{user?.email}</span>. Confirm below to switch to this plan right away.
             </p>
           </div>
           <button
@@ -133,7 +125,7 @@ export function SubscriptionPage() {
             disabled={subscribing}
             className="w-full md:w-auto py-3 px-8 rounded-lg bg-netflix-red hover:bg-red-700 disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider cursor-pointer shadow-lg shadow-netflix-red/20 active:scale-95 transition-all"
           >
-            {subscribing ? "Updating parameters..." : "Confirm Selection"}
+            {subscribing ? "Updating..." : "Confirm Selection"}
           </button>
         </div>
 

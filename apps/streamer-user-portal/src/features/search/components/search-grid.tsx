@@ -27,13 +27,12 @@ export function SearchGrid({ debouncedQuery }: SearchGridProps) {
           <Sparkles className="w-10 h-10" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-xl font-extrabold tracking-wide text-white">Discover Portal Content</h3>
+          <h3 className="text-xl font-bold text-white">Find something to watch</h3>
           <p className="text-sm text-cinema-gray leading-relaxed">
-            Search for your favorite films, trailers, categories, directors, and quality formats instantly.
+            Search by title, genre, or director.
           </p>
         </div>
-        
-        {/* Recommendation suggestions tags */}
+
         <div className="space-y-3">
           <span className="text-[10px] font-black uppercase tracking-wider text-cinema-gray">Popular Searches</span>
           <div className="flex flex-wrap justify-center gap-2">
@@ -73,8 +72,8 @@ export function SearchGrid({ debouncedQuery }: SearchGridProps) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-3 px-4">
         <AlertCircle className="w-10 h-10 text-red-500" />
-        <h4 className="font-bold text-white text-sm">Failed to search catalog</h4>
-        <p className="text-xs text-cinema-gray">Verify local server API connectivity.</p>
+        <h4 className="font-bold text-white text-sm">Search isn't working right now</h4>
+        <p className="text-xs text-cinema-gray">Give it another try in a moment.</p>
       </div>
     );
   }
@@ -97,10 +96,10 @@ export function SearchGrid({ debouncedQuery }: SearchGridProps) {
 
   return (
     <div className="space-y-6 px-4 sm:px-6 md:px-8 py-8 select-none">
-      <h3 className="text-base sm:text-lg font-black tracking-wider text-white">
-        Search Results for <span className="text-netflix-red">"{debouncedQuery}"</span> ({results.length} found)
+      <h3 className="text-base sm:text-lg font-bold text-white">
+        {results.length} result{results.length === 1 ? "" : "s"} for <span className="text-netflix-red">"{debouncedQuery}"</span>
       </h3>
-      
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

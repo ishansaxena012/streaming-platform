@@ -10,13 +10,10 @@ export function MainLayout() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#08080C] text-white overflow-x-hidden">
-      {/* Sticky top header */}
       <Navbar />
-      
-      {/* Collapsible hover sidebar */}
       <Sidebar />
-      
-      {/* Dynamic left padding adjusting on desktop sizes to accommodate the sidebar */}
+
+      {/* Left padding tracks the sidebar's collapsed/expanded width on desktop */}
       <div
         className={`flex-grow transition-all duration-300 ease-in-out ${
           sidebarExpanded ? "md:pl-[240px]" : "md:pl-[72px]"
@@ -26,12 +23,10 @@ export function MainLayout() {
           <main className="flex-grow">
             <Outlet />
           </main>
-          {/* Cinema category footer */}
           <Footer />
         </div>
       </div>
-      
-      {/* Smartphone navigation bottom navigation tab bar */}
+
       <MobileNavigation />
     </div>
   );

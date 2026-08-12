@@ -2,7 +2,8 @@ import { Injectable } from "@nestjs/common";
 import * as path from "path";
 import * as fs from "fs";
 import ffmpeg from "fluent-ffmpeg";
-// import ffmpegStatic from "ffmpeg-static";
+import ffmpegStaticPath from "ffmpeg-static";
+import ffprobeStatic from "ffprobe-static";
 import * as crypto from "crypto";
 
 export type HlsGenerationResult = {
@@ -12,11 +13,57 @@ export type HlsGenerationResult = {
 
 @Injectable()
 export class VideoProcessingService {
-  // constructor() {
-  //   if (ffmpegStatic) {
-  //     ffmpeg.setFfmpegPath(ffmpegStatic);
-  //   }
-  // }
+  constructor() {
+    const isWin = process.platform === "win32";
+    const ffmpegBinName = isWin ? "ffmpeg.exe" : "ffmpeg";
+    const ffprobeBinName = isWin ? "ffprobe.exe" : "ffprobe";
+
+    // Set Ffmpeg path: explicit env var > bundled ffmpeg-static binary (local dev,
+    // no manual setup needed) > bin/ folder override > fluent-ffmpeg's own PATH
+    // lookup (what the Docker image relies on, via the system-installed ffmpeg)
+    if (process.env.FFMPEG_PATH) {
+      ffmpeg.setFfmpegPath(process.env.FFMPEG_PATH);
+    } else if (ffmpegStaticPath && fs.existsSync(ffmpegStaticPath)) {
+      ffmpeg.setFfmpegPath(ffmpegStaticPath);
+    } else {
+      const searchPaths = [
+        path.join(process.cwd(), "bin", ffmpegBinName),
+        path.join(process.cwd(), "apps", "streamer-worker", "bin", ffmpegBinName),
+        path.join(__dirname, "..", "..", "..", "..", "bin", ffmpegBinName),
+        path.join(__dirname, "..", "..", "..", "..", "..", "bin", ffmpegBinName),
+      ];
+
+      for (const p of searchPaths) {
+        if (fs.existsSync(p)) {
+          ffmpeg.setFfmpegPath(p);
+          console.log(`[FFMPEG] Auto-configured local path: ${p}`);
+          break;
+        }
+      }
+    }
+
+    // Same fallback order for ffprobe
+    if (process.env.FFPROBE_PATH) {
+      ffmpeg.setFfprobePath(process.env.FFPROBE_PATH);
+    } else if (ffprobeStatic?.path && fs.existsSync(ffprobeStatic.path)) {
+      ffmpeg.setFfprobePath(ffprobeStatic.path);
+    } else {
+      const searchPaths = [
+        path.join(process.cwd(), "bin", ffprobeBinName),
+        path.join(process.cwd(), "apps", "streamer-worker", "bin", ffprobeBinName),
+        path.join(__dirname, "..", "..", "..", "..", "bin", ffprobeBinName),
+        path.join(__dirname, "..", "..", "..", "..", "..", "bin", ffprobeBinName),
+      ];
+
+      for (const p of searchPaths) {
+        if (fs.existsSync(p)) {
+          ffmpeg.setFfprobePath(p);
+          console.log(`[FFPROBE] Auto-configured local path: ${p}`);
+          break;
+        }
+      }
+    }
+  }
 
   async generateHls(
     localVideoPath: string,
@@ -106,8 +153,11 @@ export class VideoProcessingService {
             manifestPath: masterPath,
           });
         })
-        .on("error", (err) => {
-          console.error("FFmpeg error:", err);
+        .on("error", (err, _stdout, stderr) => {
+          console.error("FFmpeg error:", err.message);
+          if (stderr) {
+            console.error("FFmpeg stderr:\n", stderr);
+          }
           reject(err);
         })
         .run();
@@ -149,9 +199,11 @@ export class VideoProcessingService {
 
           resolve(thumbnailPath);
         })
-        .on("error", (err) => {
-          console.error("Thumbnail generation failed:", err);
-
+        .on("error", (err, _stdout, stderr) => {
+          console.error("Thumbnail generation failed:", err.message);
+          if (stderr) {
+            console.error("FFmpeg stderr:\n", stderr);
+          }
           reject(err);
         });
     });

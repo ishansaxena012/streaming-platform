@@ -9,6 +9,7 @@
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "rootDir": "./src",
     "outDir": "../../dist/apps/streamer-worker"
   },
   "include": ["src/**/*"]

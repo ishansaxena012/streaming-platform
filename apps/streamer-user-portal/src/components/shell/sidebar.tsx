@@ -9,10 +9,10 @@ export function Sidebar() {
   const { sidebarExpanded, setSidebarExpanded } = useUiStore();
 
   const menuItems = [
-    { label: "Home Dashboard", path: ROUTES.HOME, icon: Home },
-    { label: "Instant Search", path: ROUTES.SEARCH, icon: Search },
-    { label: "Subscription Plans", path: ROUTES.SUBSCRIPTION, icon: CreditCard },
-    { label: "Account Settings", path: ROUTES.SETTINGS, icon: Settings },
+    { label: "Home", path: ROUTES.HOME, icon: Home },
+    { label: "Search", path: ROUTES.SEARCH, icon: Search },
+    { label: "Subscription", path: ROUTES.SUBSCRIPTION, icon: CreditCard },
+    { label: "Settings", path: ROUTES.SETTINGS, icon: Settings },
   ];
 
   return (
@@ -23,7 +23,6 @@ export function Sidebar() {
       transition={{ duration: 0.3, ease: "easeInOut" }}
       className="hidden md:flex flex-col fixed left-0 top-16 sm:top-20 bottom-0 bg-[#08080C] border-r border-white/5 z-40 overflow-x-hidden shadow-2xl select-none"
     >
-      {/* Sidebar Links */}
       <div className="flex flex-col gap-2 py-6 px-3 flex-grow">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -42,11 +41,11 @@ export function Sidebar() {
               <div className="flex-shrink-0">
                 <Icon className="w-5 h-5" />
               </div>
-              
+
               <motion.span
                 animate={{ opacity: sidebarExpanded ? 1 : 0 }}
                 transition={{ duration: 0.2 }}
-                className="text-xs font-semibold tracking-wider whitespace-nowrap uppercase"
+                className="text-xs font-semibold whitespace-nowrap"
               >
                 {item.label}
               </motion.span>
@@ -54,13 +53,12 @@ export function Sidebar() {
           );
         })}
       </div>
-      
-      {/* Sidebar Footer info */}
-      <div className="p-4 border-t border-white/5 text-[9px] text-cinema-gray text-center font-bold tracking-widest uppercase">
+
+      <div className="p-4 border-t border-white/5 text-center">
         {sidebarExpanded ? (
-          <span className="animate-pulse text-white/50">Portal Streamer Core</span>
+          <span className="text-[10px] font-bold tracking-wide text-white/30">MARQUEE</span>
         ) : (
-          <span>P1</span>
+          <span className="text-[10px] font-black text-white/30">M</span>
         )}
       </div>
     </motion.aside>

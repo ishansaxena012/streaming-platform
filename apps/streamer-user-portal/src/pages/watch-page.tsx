@@ -11,18 +11,16 @@ export function WatchPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // Query 1: Fetch static video metadata
   const {
     data: movie,
     isLoading: metadataLoading,
     error: metadataError,
-  } = useQuery<Movie>({
+  } = useQuery<Movie | null>({
     queryKey: ["movie-detail", id],
     queryFn: () => contentService.getMovieById(id || ""),
     enabled: !!id,
   });
 
-  // Query 2: Fetch stream URL in PARALLEL. (Doesn't need the whole movie object, just the ID)
   const {
     data: playbackUrl,
     isLoading: playbackLoading,
@@ -30,32 +28,28 @@ export function WatchPage() {
   } = useQuery({
     queryKey: ["movie-playback", id],
     queryFn: () => contentService.getVideoPlaybackUrl(id || ""),
-    enabled: !!id, // Trigger immediately alongside metadata
+    enabled: !!id,
     staleTime: 0,
     gcTime: 0,
   });
 
-  // Combine conditions accurately
   const isLoading = metadataLoading || playbackLoading;
   const hasError = metadataError || playbackError;
 
-  // 1. Show loader while either network request is active
   if (isLoading) {
-    return <PageLoader message="Allocating secure streaming channels..." />;
+    return <PageLoader message="Loading video..." />;
   }
 
-  // 2. Show error block ONLY if an explicit network error occurs, or if loading finished and data is missing
-  if (hasError || (!isLoading && (!movie || !playbackUrl))) {
+  if (hasError || !movie || !playbackUrl) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center gap-5 p-6">
         <AlertCircle className="w-12 h-12 text-netflix-red animate-pulse" />
         <div className="space-y-1.5">
           <h3 className="text-xl font-bold text-white">
-            Stream Allocation Failed
+            This video isn't available
           </h3>
           <p className="text-xs text-cinema-gray max-w-xs mx-auto">
-            The secure playback request was rejected by the gateway. Verify your
-            subscription plan or local server status.
+            It may have been removed, or your subscription may not include it.
           </p>
         </div>
         <button
@@ -71,7 +65,6 @@ export function WatchPage() {
 
   return (
     <div className="w-full h-screen bg-black">
-      {/* Both variables are guaranteed defined here without runtime UI flashes */}
       <CustomPlayer videoId={movie.id} streamUrl={playbackUrl} />
     </div>
   );

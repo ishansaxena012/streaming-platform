@@ -9,8 +9,6 @@ export function SearchPage() {
 
   return (
     <div className="bg-[#08080C] min-h-[80vh] py-8 select-none">
-      
-      {/* Mobile search bar container input (for touch responsive sizes) */}
       <div className="max-w-md mx-auto px-4 mb-6 md:hidden">
         <div className="relative flex items-center group">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-cinema-gray group-focus-within:text-netflix-red transition-colors">
@@ -29,7 +27,6 @@ export function SearchPage() {
       <div className="max-w-7xl mx-auto">
         <SearchGrid debouncedQuery={debouncedSearchQuery} />
       </div>
-
     </div>
   );
 }
